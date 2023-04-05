@@ -1,0 +1,31 @@
+/* Global customization */
+
+:root {
+  --code-max-height: 60rem;
+}
+
+/* Light mode theming */
+:root,
+:root[color-theme="light"] {
+  --header-background: #d3d3d3;
+  --header-font-color: #00236aff;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --header-background: #d3d3d3;
+    --header-font-color: #00236aff;
+  }
+}
+
+/* Dark mode theming */
+:root[color-theme="dark"] {
+  --header-background: #d3d3d3;
+  --header-font-color: #00236aff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --header-background: #d3d3d3;
+    --header-font-color: #00236aff;
+  }
+}

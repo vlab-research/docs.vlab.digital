@@ -7,21 +7,21 @@ draft: False
 General Configuration is still pretty Facebook specific. This is used to setup
 the study and "glue" together all the various other configurations. 
 
+You can configure the general configuration by going to the studies list page
+and clicking on the "configure" icon at the right of the study
+
+This should open the following page:
+
+![general configuration page](/images/general-conf.png)
+
 ### Fields
 
-- `name (required)`: a unique name of the study used as an identifier
-- `objective (required)`:
-- `optimization_goal (required)`: What are we trying to optimize for? Currently
-    Supports [`Link Clicks`]
-- `destination_type (required)`: The type of destination that we are routing
-    recruited people to [`Messenger`, `Web`, `App`]
-- `page_id (required)`: The identifier for the Facebook page that the study
-    will be run from
-- `instagram_id (optional)`: The identifier of the Instagram account to use to
-    target recruits
-- `min_budget (required)`: The minimum budget for the campaign
-- `opt_window (required)`:
-- `ad_account (required)`: The Ad's account to use to setup the ads used to
-    recruit
-- `extra_metadata (required)`:
+- `Objective (required)`:
+- `Optimization Goal (required)`: What are we trying to optimize for?
+- `Destination Type (required)`: The type of destination that we are routing recruited people to
+- `Page Id (required)`: The identifier for the Facebook page that the study will be run from
+- `Minimum Budget (required)`: The minimum budget for the campaign
+- `Opt Window (required)`:
+- `Instagram Id (optional)`: The identifier of the Instagram account to use to target recruits
+- `Ad Account (required)`: The Ad's account to use to setup the ads used to recruit
 

@@ -24,3 +24,6 @@ enableRobotsTXT = true
 
 [taxonomies]
    tag = "tags"
+
+[params]
+ geekdocLogo = 'images/logo.png' 
