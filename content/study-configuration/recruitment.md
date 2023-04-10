@@ -18,6 +18,8 @@ This is the easiest of the recruiting strategies where the Virtual Labs platform
 routinely check your ad campaign and update the campaign accordingly to try and
 achieve your recruiting goals.
 
+![recruitment simple conf](/images/recruitment-simple-conf.png)
+
 You will need to provide the following fields:
 
 - `Ad Campaign Name`: This is the name of the ad campaign that this recruitment
@@ -29,7 +31,10 @@ You will need to provide the following fields:
 
 ## Destination Experiment 
 
-Use this when you want to create a multi-arm randomized experiment (A/B test on Facebook) where some of your sample is sent to different [destinations]({{< ref destination.md >}} "Destination Configuration"). You will need to have the destinations configured and you will then need to set the following fields:
+Use this when you want to create a multi-arm randomized experiment (A/B test on Facebook) where some of your sample is sent to different [destinations]({{< ref destination.md >}} "Destination Configuration"). 
+
+
+You will need to have the destinations configured and you will then need to set the following fields:
 
 - `Ad Campaign Name Base`: The name of the ad campaign(s) that vlab will create and use for recruitment. If you have more than one campaign (i.e. Destination Experiment), it will append -1, -2, etc. to this name
 - `Budget Per Arm`: How much you would like to spend per arm of your experiment
@@ -45,6 +50,9 @@ Use this when you want to create a multi-arm randomized experiment (A/B test on 
 
 In this design, we generate an A/B test on Facebook but instead of sending your sample to different destinations, we run the ads at different times (a pipeline experiment design). You can set up how long each arm runs, and how long they are offset from the start of the previous arm.
 
+![recruitment pipeline conf](/images/recruitment-pipeline-conf.png)
+
+You will need to provide the following fields:
 
 - `Ad Campaign Name Base`: The name of the ad campaign(s) that vlab will create and use for recruitment. If you have more than one campaign (i.e. Destination Experiment), it will append -1, -2, etc. to this name
 - `Budget Per Arm`: How much you would like to spend per arm of your experiment
