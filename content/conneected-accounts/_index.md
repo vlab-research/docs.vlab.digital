@@ -10,3 +10,5 @@ supported
 
 - [Fly]({{< ref fly.md >}} "Fly")
 - [Tyepform]({{< ref typeform.md >}} "Typeform")
+
+ You can also see [how to delete a connected account]({{< ref delete-accounts.md >}} "Delete Accounts")
