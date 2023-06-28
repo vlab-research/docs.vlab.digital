@@ -2,6 +2,7 @@
 title: "Recruitment"
 date: 2023-04-05T08:40:52+02:00
 draft: false
+weight: 8
 ---
 
 The "recruitment" configuration describes how/where recruitment will take place. Every study needs to recruit from somewhere.
@@ -29,9 +30,9 @@ You will need to provide the following fields:
 - `Start Date`: The date in which the recruiting should start
 - `End Date`: The date on which the recruiting should end
 
-## Destination Experiment 
+## Destination Experiment
 
-Use this when you want to create a multi-arm randomized experiment (A/B test on Facebook) where some of your sample is sent to different [destinations]({{< ref destination.md >}} "Destination Configuration"). 
+Use this when you want to create a multi-arm randomized experiment (A/B test on Facebook) where some of your sample is sent to different [destinations]({{< ref destination.md >}} "Destination Configuration").
 
 
 You will need to have the destinations configured and you will then need to set the following fields:

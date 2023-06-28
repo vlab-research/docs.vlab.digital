@@ -1,6 +1,7 @@
 ---
 title: Connected Accounts
 author: "Brendan Kamp"
+weight: 5
 ---
 
 connected accounts are virtual labs way to connect different third part
