@@ -2,7 +2,7 @@
 title: "Destinations"
 date: 2023-04-05T08:41:03+02:00
 draft: false
-weight: 2
+weight: 4
 ---
 
 Every study needs a destination, where do the recruitment ads send the users? Destinations need to be connected to Virtual Lab so that, not only does it know where to send people who click on the recruitment ads, but also so that it knows how to collect the information about those who become study participants and knows how to optimize ads.

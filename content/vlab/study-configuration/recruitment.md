@@ -2,7 +2,7 @@
 title: "Recruitment"
 date: 2023-04-05T08:40:52+02:00
 draft: false
-weight: 8
+weight: 3
 ---
 
 The "recruitment" configuration describes how/where recruitment will take place. Every study needs to recruit from somewhere.

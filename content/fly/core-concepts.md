@@ -3,8 +3,6 @@ title: Core Concepts
 weight: 0
 ---
 
-## Core concepts
-
 Survey in Fly consist of one or more "Forms". "Surveys" themselves are nothing more then a collection of forms with a name. Surveys are the unit for downloading data - you download data for one "survey" all together.
 
 Forms are parts of a survey. They consist of questions that a participant will answer. Forms are each given an individual "shortcode", which identifies the form.

@@ -2,7 +2,7 @@
 title: "Creative"
 date: 2023-04-05T08:41:10+02:00
 draft: false
-weight: 4
+weight: 8
 ---
 
 Recruitment needs ads and ads need creative. Each creative consists of one of several fields:
