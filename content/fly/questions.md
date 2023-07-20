@@ -85,6 +85,19 @@ JSON:
 ```json
 {
   "type": "webview",
+  "url": "https://asiapacific.unwomen.org/en/countries/india",
+  "buttonText": "Visit UN Women",
+  "extensions": false,
+  "keepMoving": true
+}
+```
+
+If you want to go further, Fly offers the ability to track link clicking. That can be done with the following snippet:
+
+JSON:
+```json
+{
+  "type": "webview",
   "url": {
     "base": "links.vlab.digital",
     "params": {
@@ -97,7 +110,7 @@ JSON:
 }
 ```
 
-To track information about the user, add metadata as query parameters in addition to `url` in the `url` value. For example, you can add the user id by adding `id` with a typeform ref to a "hidden field" called "id" (note, you will probably need to type out the "@id" part inside Typeform so it links it to a hidden field properly):
+To track specific information about the user, add metadata as query parameters in addition to `url` in the `url` value. For example, you can add the user id by adding `id` with a typeform ref to a "hidden field" called "id" (note, you will probably need to type out the "@id" part inside Typeform so it links it to a hidden field properly):
 
 ```json
 {
