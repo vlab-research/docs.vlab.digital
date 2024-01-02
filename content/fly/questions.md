@@ -168,6 +168,36 @@ JSON:
 
 Where `FORM_SHORTCODE` is the shortcode of the form you'd like to move to.
 
+## Wait - External Events
+
+You can wait on external events. For example, linksniffer events allow you to wait until someone clicks a link. Or MovieHouse events allow you to wait until someone has started (or finished) a video.
+
+For example, this JSON would wait for a moviehouse:play event with the video id 23456:
+
+```json
+{ "type": "wait",
+ "wait": {
+ "type": "external",
+ "value": {
+    "type": "moviehouse:play",
+    "id": "23456"
+  }}
+}
+```
+
+If you want to wait for any moviehouse:play event, regardless of video id, you can simply omit part of the json from the "value" property:
+
+```json
+{ "type": "wait",
+ "wait": {
+ "type": "external",
+ "value": {
+    "type": "moviehouse:play"
+  }}
+}
+```
+
+
 ## Wait - Timeout
 
 Timeouts allow you to pause your survey and continue it later, creating multi-wave surveys. There are three ways to create a timeout:

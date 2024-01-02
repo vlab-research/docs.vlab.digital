@@ -12,4 +12,4 @@ To do so, Virtual Lab needs to know a few things:
 2. What should the ads look like? This is called `Creative`.
 3. How should the ads be targeted to different types of people? This is defined with `Variables` and `Strata`.
 4. How much money can be spent on advertising and over what period of time? This is called `Recruitment`.
-5. How will Virtual Lab know how many, and what type, of people have been fully recruited? This involves configuring a `Source` and defining a set of `Inference Variables` used to determine stratification.
+5. How will Virtual Lab know how many, and what type, of people have been fully recruited? This involves configuring a `Data Source` and defining a set of `Data Extraction` variables used to determine stratification.
