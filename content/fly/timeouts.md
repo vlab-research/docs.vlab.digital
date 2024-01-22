@@ -1,5 +1,5 @@
 ---
-title: Question Types
+title: Timeouts
 weight: 5
 ---
 
