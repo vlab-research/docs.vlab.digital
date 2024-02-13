@@ -1,7 +1,7 @@
 baseURL = "https://docs.vlab.digital"
 languageCode = 'en-us'
 title = 'Virtual Lab Documentation'
-theme = "hugo-geekdoc"
+theme = ["hugo-geekdoc"]
 
 pluralizeListTitles = false
 
@@ -26,4 +26,4 @@ enableRobotsTXT = true
    tag = "tags"
 
 [params]
- geekdocLogo = 'images/logo.png'
+   geekdocLogo = 'images/logo.png'

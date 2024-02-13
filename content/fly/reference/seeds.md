@@ -12,3 +12,11 @@ This hidden field will have the assignment of each user, which will be an intege
 Now use the hidden field in your logic jumps. If, for example, you create a hidden field called `seed_3`, then create logic jumps such that:
 
 if `seed_3 == 1` do A, if `seed_3 == 2` do B, if `seed_3 == 3` do C.
+
+## Testing Random Seeds
+
+Random seeds can be tested just like any other hidden field, using the following format (testing seed_2):
+
+https://m.me/YOURPAGEID?ref=form.YOURSHORTCODE.seed_2.YOURSEED
+
+In this case, you should replace YOURSEED with either `1` or `2`.
