@@ -103,6 +103,6 @@ Your form should work in Messenger, however, you should notice that you get an e
 2. You need to replace the variables `your_funding_source_id` and `product_id_that_you_want` with the correct IDs from Tremendous.
 
 
-Now, return to the [Tremendous Payment Reference]({{< ref "fly/reference/incentive_payments.md" >}}) documentation and fix the two problems. After you do that, you should be able to test out the survey with a paid gift card!
+Now, return to the [Tremendous Payment Reference]({{< ref "fly/reference/incentive_payments.md#payment---tremendous" >}}) documentation and fix the two problems. After you do that, you should be able to test out the survey with a paid gift card!
 
 Congrats, you have now paid your study participants.
