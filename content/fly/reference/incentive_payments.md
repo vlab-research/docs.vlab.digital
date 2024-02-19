@@ -99,7 +99,7 @@ We can use our Generic HTTP Payment Endpoint type to make a request to [Tremendo
 
 First, you will need to create a new "Generic Secret" under Connected Accounts on the home screen of the dashboard. Give your secret a variable name of "TREMENDOUS_API_KEY" and a value equal to the API key of your Tremendous account.
 
-Second, you will use the following JSON. Replace `product_id_that_you_want` with the product_id from Tremendous and replace `your_funding_source_id` with the funding source id from Tremendous. NOTE: DO NOT REPLACE "TREMENDOUS_API_KEY", that needs to stay exactly the same, so that you don't put your secret API KEY in the survey, which will be shared with your collaborators and potentially made public.
+Second, you will use the following JSON. Replace `product_id_that_you_want` with the product_id from Tremendous and replace `your_funding_source_id` with the funding source id from Tremendous. You can read how to get your funding source id from the api [here](https://developers.tremendous.com/docs/paying-for-orders#funding-sources). NOTE: DO NOT REPLACE "TREMENDOUS_API_KEY", that is a variable that will be filled with the value from "Generic Secrets" in the Fly dashboard. This ensures that you don't put your secret API KEY in the survey, which will be shared with your collaborators and potentially made public.
 
 JSON:
 ``` json
