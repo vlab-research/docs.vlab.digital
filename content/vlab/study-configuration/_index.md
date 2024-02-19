@@ -1,7 +1,6 @@
 ---
 title: Study Configurations
-author: "Brendan Kamp"
-weight: 0
+weight: 2
 ---
 
 {{< toc-tree >}}
