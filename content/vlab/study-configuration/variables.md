@@ -20,3 +20,16 @@ This can be made most clear with examples. First, create an empty Template Campa
 2. If you want to target location, where you divide a country into two Levels: "capital region" and "everything else". You would create a Variable called "location" with the Properties "Geo Locations" and "Excluded Geo Locations". You would then create two Adsets in your template campaign. One would target the captial city. The other would _exclude_ the capital city. You then create 2 Levels associated with each of those two Adsets.
 
 [Example Video]
+
+## Adding targeting information across all strata
+
+Often, we want to add targeitng information that isn't stratified, it's the same across all strata. Examples might include:
+
+1. You are not stratifying by geography, but want to target a whole country.
+2. You are not stratifying by age, but only want to target a narrow age band (i.e. 18-24).
+3. You want to exclude respondents from a previous study via a custom audience.
+
+There are two ways to solve this problem:
+
+1. Add the targeting to _all_ your templates and select the appropriate properties in each variable.
+2. Create a new variable (i.e. "geography" or "age" or "additional"), give it just one level (i.e. "all"), and pick all the appriopriate properties.
