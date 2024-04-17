@@ -27,3 +27,17 @@ Random seeds can be tested just like any other hidden field, using the following
 https://m.me/YOURPAGEID?ref=form.YOURSHORTCODE.seed_2.YOURSEED
 
 In this case, you should replace YOURSEED with either `1` or `2`.
+
+
+## Analyzing seeds
+
+Every user is given a long integer which is their random seed (i.e. 2843167128). A calculation is done on this integer to determine their `seed_N` or `seed_N_V`. In order to analyze the data, you will need to recreate this calculation. 
+
+The formula for a basic `seed_N` is `seed_N = seed % N + 1`
+
+For example: 
+
+1. `seed_2 = seed % 2 + 1`
+2. `seed_3 = seed % 3 + 1`
+
+For multiple seeds, it gets a bit more complicated. In particular, you will need to first hash the integer `V` times using Farmhash 32-bit fingerprint, and then you apply the previous formula. 

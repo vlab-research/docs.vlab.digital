@@ -39,4 +39,7 @@ This pivots the data from long to wide format, such that each row is a user/shor
 
 ## Metadata to add as columns when pivoting
 
-Only useful when pivoting the data to wide format. This takes metadata from the user and adds it as a column.
+Only useful when pivoting the data to wide format. This takes metadata from the user and adds it as a column. Very useful in conjunction with vlab for recruiting, for example: 
+
+1. For adding metadata like "creative" to know which ad the respondent came through. 
+2. Adding metadata associated with variables used for stratification. In that case, they take the name of the [variable]({{< ref "vlab/study-configuration/variables.md">}}) that you defined when setting up the study in vlab.
