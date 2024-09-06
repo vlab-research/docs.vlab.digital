@@ -101,7 +101,9 @@ JSON:
   "url": {
     "base": "links.vlab.digital",
     "params": {
-      "url": "asiapacific.unwomen.org/en/countries/india"
+      "url": "asiapacific.unwomen.org/en/countries/india",
+      "id": "{{hidden:id}}",
+      "pageid": "YOUR_PAGE_ID"
     }
   },
   "buttonText": "Visit UN Women",
@@ -119,7 +121,8 @@ To track specific information about the user, add metadata as query parameters i
     "base": "links.vlab.digital",
     "params": {
       "url": "asiapacific.unwomen.org/en/countries/india",
-      "id": @id
+      "id": "{{hidden:id}}",
+      "pageid": "YOUR_PAGE_ID"
     }
   },
   "buttonText": "Visit UN Women",
@@ -137,7 +140,9 @@ JSON:
   "url": {
     "base": "links.vlab.digital",
     "params": {
-      "url": "asiapacific.unwomen.org/en/countries/india"
+      "url": "asiapacific.unwomen.org/en/countries/india",
+      "id": "{{hidden:id}}",
+      "pageid": "YOUR_PAGE_ID"
     }
   },
   "buttonText": "Visit UN Women",
