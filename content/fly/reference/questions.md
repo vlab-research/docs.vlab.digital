@@ -77,6 +77,20 @@ JSON:
 }
 ```
 
+
+## Upload
+
+The "Upload" type allows users to send attachments, such as images or files. Use the attachment type ("image" for pictures) to specify what kind of file you would like the user to provide. The response in the exported dataset will equal a facebook URL to the file for download.
+
+JSON:
+```json
+{"type": "upload",
+ "upload": {
+    "type": "image"
+ }
+}
+```
+
 ## Links
 
 It's possible to send a link as a button and allow the users to open it in a Messenger webview:
