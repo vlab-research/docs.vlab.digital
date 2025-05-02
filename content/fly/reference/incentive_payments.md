@@ -25,7 +25,8 @@ JSON:
             "amount": 100,
             "tolerance": 30,
             "country": "IN",
-            "id": "PAYMENT_ID"
+            "id": "PAYMENT_ID",
+            "custom_identifier": "CUSTOM_IDENTIFIER",
         }
     }
 }
@@ -34,8 +35,9 @@ JSON:
 Notes:
 
 1. The "wait" is not strictly necessary but likely desired!
-2. `PAYMENT_ID` can be useful to keep track of multiple payments to the same person or different payments to different treatment arms (a unique id per treatment arm).
+2. `PAYMENT_ID` can be useful to keep track of multiple payments to the same person or different payments to different treatment arms (a unique id per treatment arm). You need to have the same PAYMENT_ID for both the "wait" and the "payment" blocks.
 3. the `key` is the name you give the desired Reloadly credentials in the Fly dashboard.
+4. `CUSTOM_IDENTIFIER` is a unique string that ensures that no payment is repeated. For example, if you only want to provide a payment to each phone once, you can make this a combination of the shortcode and the phone number.
 
 You will have the following hidden fields that can be used for logic and error messages:
 
