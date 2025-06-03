@@ -53,6 +53,8 @@ In Typeform, pick "Statement"
 
 ## Image
 
+For an image you can use a URL:
+
 JSON:
 ```json
 {"type": "attachment",
@@ -60,6 +62,19 @@ JSON:
  "attachment": {
     "type": "image",
     "url": "https://i.imgur.com/ZSHauqq.png"
+ }
+}
+```
+
+Or, to be more performant, you can pre-upload it to Facebook and then use it as an attachment id:
+
+```json
+
+{"type": "attachment",
+ "keepMoving": true,
+ "attachment": {
+    "type": "image",
+    "attachment_id": "3656576331230635"
  }
 }
 ```
