@@ -202,6 +202,15 @@ JSON:
 
 Where `FORM_SHORTCODE` is the shortcode of the form you'd like to move to.
 
+You can also include metadata: 
+
+JSON:
+```json
+{"type": "stitch",
+ "stitch": { "form": "FORM_SHORTCODE", metadata: {"variable_name": "variable_answer" }}}
+```
+
+
 ## Wait - External Events
 
 You can wait on external events. For example, linksniffer events allow you to wait until someone clicks a link. Or MovieHouse events allow you to wait until someone has started (or finished) a video.
