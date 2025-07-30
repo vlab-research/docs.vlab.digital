@@ -202,7 +202,7 @@ JSON:
 
 Where `FORM_SHORTCODE` is the shortcode of the form you'd like to move to.
 
-You can also include metadata: 
+You can also include metadata:
 
 JSON:
 ```json
@@ -210,10 +210,16 @@ JSON:
  "stitch": { "form": "FORM_SHORTCODE", metadata: {"variable_name": "variable_answer" }}}
 ```
 
+## Wait - Timeout
 
-## Wait - External Events
+Timeouts allow you to pause your survey and continue it later, creating multi-wave surveys. See more under [Timeouts]({{< ref "fly/reference/timeouts.md">}}).
+
+
+# Wait - External Events
 
 You can wait on external events. For example, linksniffer events allow you to wait until someone clicks a link. Or MovieHouse events allow you to wait until someone has started (or finished) a video.
+
+## Basic Wait Examples
 
 For example, this JSON would wait for a moviehouse:play event with the video id 23456:
 
@@ -240,10 +246,182 @@ If you want to wait for any moviehouse:play event, regardless of video id, you c
 }
 ```
 
+## Complex Wait Logic with Operators
 
-## Wait - Timeout
+For more complex scenarios, you can use logical operators (`op`) and variables (`vars`) to create compound wait conditions. This allows you to wait for multiple events or create sophisticated logic.
 
-Timeouts allow you to pause your survey and continue it later, creating multi-wave surveys. See more under [Timeouts]({{< ref "fly/reference/timeouts.md">}}).
+### Available Operators
+
+- **`and`**: All conditions must be fulfilled
+- **`or`**: At least one condition must be fulfilled
+
+### Basic AND Logic
+
+Wait for both a link click AND a video play event:
+
+```json
+{
+  "type": "wait",
+  "wait": {
+    "type": "external",
+    "op": "and",
+    "vars": [
+      {
+        "type": "external",
+        "value": {
+          "type": "linksniffer:click",
+          "url": "https://example.com"
+        }
+      },
+      {
+        "type": "external",
+        "value": {
+          "type": "moviehouse:play",
+          "id": "12345"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Basic OR Logic
+
+Wait for either a link click OR a video play event:
+
+```json
+{
+  "type": "wait",
+  "wait": {
+    "type": "external",
+    "op": "or",
+    "vars": [
+      {
+        "type": "external",
+        "value": {
+          "type": "linksniffer:click",
+          "url": "https://example.com"
+        }
+      },
+      {
+        "type": "external",
+        "value": {
+          "type": "moviehouse:play",
+          "id": "12345"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Nested Logic
+
+You can create more complex nested conditions. For example, wait for (link click AND video start) OR (link click AND video finish):
+
+```json
+{
+  "type": "wait",
+  "wait": {
+    "type": "external",
+    "op": "or",
+    "vars": [
+      {
+        "type": "external",
+        "op": "and",
+        "vars": [
+          {
+            "type": "external",
+            "value": {
+              "type": "linksniffer:click",
+              "url": "https://example.com"
+            }
+          },
+          {
+            "type": "external",
+            "value": {
+              "type": "moviehouse:play",
+              "id": "12345"
+            }
+          }
+        ]
+      },
+      {
+        "type": "external",
+        "op": "and",
+        "vars": [
+          {
+            "type": "external",
+            "value": {
+              "type": "linksniffer:click",
+              "url": "https://example.com"
+            }
+          },
+          {
+            "type": "external",
+            "value": {
+              "type": "moviehouse:finish",
+              "id": "12345"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Mixed Event Types
+
+You can combine different types of events in the same logical expression:
+
+```json
+{
+  "type": "wait",
+  "wait": {
+    "type": "external",
+    "op": "and",
+    "vars": [
+      {
+        "type": "external",
+        "value": {
+          "type": "linksniffer:click",
+          "url": "https://example.com"
+        }
+      },
+      {
+        "type": "timeout",
+        "value": "5m"
+      }
+    ]
+  }
+}
+```
+
+This example waits for both a link click AND a 5-minute timeout to occur.
+
+## Structure Reference
+
+When using operators, the wait object should have this structure:
+
+```json
+{
+  "type": "wait",
+  "wait": {
+    "type": "external",
+    "op": "and|or",
+    "vars": [
+      // Array of wait conditions (can be simple or complex)
+    ]
+  }
+}
+```
+
+Each item in the `vars` array can be:
+- A simple wait condition (with `type` and `value`)
+- Another complex condition (with `op` and `vars` for nesting)
+
+This allows you to create arbitrarily complex logical expressions for your wait conditions.
 
 
 ## Payment
