@@ -427,3 +427,28 @@ This allows you to create arbitrarily complex logical expressions for your wait 
 ## Payment
 
 Read about payment question types under [Incentive Payments]({{< ref "fly/reference/incentive_payments.md">}})
+
+## Passing Thread Control
+
+To pass thread control to another app, tag your final question with the following: 
+
+```json
+handoff: { 
+  target_app_id: '123456789', 
+  metadata: { reason: 'some metadata' } 
+}
+```
+
+If you would like to pass control, then wait for it to come back before proceeding to the next question, you can combine this with a wait event: 
+
+
+```json
+handoff: { 
+  target_app_id: '123456789', 
+  metadata: { reason: 'some metadata' } 
+}
+wait: { 
+    type: 'handover', 
+    value: { target_app_id: '123456789' }
+}
+```
