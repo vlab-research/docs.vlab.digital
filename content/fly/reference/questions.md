@@ -433,9 +433,11 @@ Read about payment question types under [Incentive Payments]({{< ref "fly/refere
 To pass thread control to another app, tag your final question with the following: 
 
 ```json
-handoff: { 
-  target_app_id: '123456789', 
-  metadata: { reason: 'some metadata' } 
+{
+  "handoff": { 
+    "target_app_id": "123456789", 
+    "metadata": { "return_app_id": "987765432" } 
+  }
 }
 ```
 
@@ -443,12 +445,14 @@ If you would like to pass control, then wait for it to come back before proceedi
 
 
 ```json
-handoff: { 
-  target_app_id: '123456789', 
-  metadata: { reason: 'some metadata' } 
-}
-wait: { 
-    type: 'handover', 
-    value: { target_app_id: '123456789' }
+{
+  "handoff": { 
+    "target_app_id": "123456789", 
+    "metadata": { "return_app_id": "987765432" } 
+  }
+  "wait": { 
+    "type": "handover", 
+    "value": { "target_app_id": "123456789" }
+  }
 }
 ```
