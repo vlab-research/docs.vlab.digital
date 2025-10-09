@@ -126,6 +126,7 @@ JSON:
         "Content-Type": "application/json"
       },
       "body": {
+        "external_id": "{{hidden:id}}_my_shortcode"      
         "payment": { "funding_source_id": "your_funding_source_id" },
         "rewards": [{
           "value": { "denomination": 5.0, "currency_code": "EUR" },
