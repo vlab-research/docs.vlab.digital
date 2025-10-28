@@ -187,7 +187,41 @@ JSON:
 }
 ```
 
-You can set `extensions` to `true` if the page you are visiting is using Messenger Extensions (i.e. Fly Survey's "Moviehouse" which can be used to watch Vimeo videos and track video-watching events)
+You can set `extensions` to `true` if the page you are visiting is using Messenger Extensions (i.e. Fly Survey's "Moviehouse" which can be used to watch Vimeo videos and track video-watching events: 
+
+Moviehouse example, which waits until they either start watching the video OR one hour is passed:
+
+```json
+  {
+    "type": "webview",
+    "url": {
+        "base": "virtuallab-videos.netlify.app",
+        "params": {
+            "id": "YOUR_VIMEO_ID",
+            "pageId": "YOUR_FACEBOOK_PAGE_ID"
+        }
+    },
+    "buttonText": "Watch now!",
+    "responseMessage": "Sorry, you need to watch the video before continuing",
+    "wait": {
+      "op": "or",
+      "vars": [
+        {
+          "type": "timeout",
+          "value": "1 hour"
+        },
+        {
+          "type": "external",
+          "value": {
+            "type": "moviehouse:play",
+            "id": "YOUR_VIMEO_ID"
+          }
+        }
+      ]
+    }
+  }
+
+```
 
 ## Stitch
 
