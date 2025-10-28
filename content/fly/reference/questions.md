@@ -203,6 +203,7 @@ Moviehouse example, which waits until they either start watching the video OR on
     },
     "buttonText": "Watch now!",
     "responseMessage": "Sorry, you need to watch the video before continuing",
+    "extensions": true,    
     "wait": {
       "op": "or",
       "vars": [
