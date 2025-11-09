@@ -187,7 +187,7 @@ JSON:
 }
 ```
 
-You can set `extensions` to `true` if the page you are visiting is using Messenger Extensions (i.e. Fly Survey's "Moviehouse" which can be used to watch Vimeo videos and track video-watching events: 
+You can set `extensions` to `true` if the page you are visiting is using Messenger Extensions (i.e. Fly Survey's "Moviehouse" which can be used to watch Vimeo videos and track video-watching events:
 
 Moviehouse example, which waits until they either start watching the video OR one hour is passed:
 
@@ -198,12 +198,13 @@ Moviehouse example, which waits until they either start watching the video OR on
         "base": "virtuallab-videos.netlify.app",
         "params": {
             "id": "YOUR_VIMEO_ID",
-            "pageId": "YOUR_FACEBOOK_PAGE_ID"
+            "pageId": "YOUR_FACEBOOK_PAGE_ID",
+            "userId": "{{hidden:id}}"
         }
     },
     "buttonText": "Watch now!",
     "responseMessage": "Sorry, you need to watch the video before continuing",
-    "extensions": true,    
+    "extensions": true,
     "wait": {
       "op": "or",
       "vars": [
@@ -465,28 +466,28 @@ Read about payment question types under [Incentive Payments]({{< ref "fly/refere
 
 ## Passing Thread Control
 
-To pass thread control to another app, tag your final question with the following: 
+To pass thread control to another app, tag your final question with the following:
 
 ```json
 {
-  "handoff": { 
-    "target_app_id": "123456789", 
-    "metadata": { "return_app_id": "987765432" } 
+  "handoff": {
+    "target_app_id": "123456789",
+    "metadata": { "return_app_id": "987765432" }
   }
 }
 ```
 
-If you would like to pass control, then wait for it to come back before proceeding to the next question, you can combine this with a wait event: 
+If you would like to pass control, then wait for it to come back before proceeding to the next question, you can combine this with a wait event:
 
 
 ```json
 {
-  "handoff": { 
-    "target_app_id": "123456789", 
-    "metadata": { "return_app_id": "987765432" } 
+  "handoff": {
+    "target_app_id": "123456789",
+    "metadata": { "return_app_id": "987765432" }
   }
-  "wait": { 
-    "type": "handover", 
+  "wait": {
+    "type": "handover",
     "value": { "target_app_id": "123456789" }
   }
 }
