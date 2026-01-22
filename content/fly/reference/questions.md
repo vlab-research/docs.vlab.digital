@@ -38,6 +38,38 @@ Which region do you live in?
 
 The `-` and the `.` before and after the letters are optional, but recommended for legibility.
 
+## Button Choice
+
+Button Choice is similar to Multiple Choice, but displays options as persistent buttons instead of quick replies. Quick replies disappear after the user taps one, while button template buttons remain visible in the chat.
+
+In Typeform, pick "Multiple Choice", then add the following to the description:
+
+```json
+{"type": "button_choice"}
+```
+
+**Limitations:**
+
+1. Maximum of **3 buttons** (Facebook API limit). Use Multiple Choice for more options.
+2. Button titles are truncated at 20 characters by Facebook.
+3. Template text is limited to 640 characters.
+
+**When to use Button Choice:**
+
+- For questions with 3 or fewer options where you want buttons to persist visually
+- Yes/No/Maybe style questions with a button appearance
+- When you want the visual distinction of button templates over quick replies
+
+**Example Setup:**
+
+Create a Multiple Choice question in Typeform with your options (up to 3), then add to the description:
+
+```json
+{"type": "button_choice"}
+```
+
+The bot will display a button template with postback buttons instead of quick replies.
+
 ## Number
 
 Number type validates that the user has sent us a number and only a number. To change the error message when a user enters something other than a number, do: ....
