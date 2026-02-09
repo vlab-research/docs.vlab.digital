@@ -257,6 +257,123 @@ Moviehouse example, which waits until they either start watching the video OR on
 
 ```
 
+### Using Special URI Schemes (tel, mailto, sms)
+
+In addition to HTTP and HTTPS links, linksniffer supports special URI schemes like `tel:`, `mailto:`, `sms:`, and others. This allows you to create buttons that trigger phone calls, compose emails, or send SMS messages directly from your chatbot.
+
+The linksniffer service accepts an optional `p` (protocol) parameter to specify which URI scheme to use:
+
+- **`https`** (default) - Standard web links
+- **`http`** - Non-secure web links
+- **`tel`** - Phone number links (triggers phone dialer)
+- **`mailto`** - Email links (opens email client)
+- **`sms`** - SMS links (opens messaging app)
+- **Other single-colon schemes** - Any valid URI scheme (e.g., `whatsapp:`)
+
+**Protocol formatting:**
+- HTTP and HTTPS use `://` separator: `https://example.com`
+- All other schemes use `:` separator: `tel:+1234567890`, `mailto:user@example.com`
+
+#### Example: Phone Number Link
+
+To create a button that opens the phone dialer:
+
+```json
+{
+  "type": "webview",
+  "url": {
+    "base": "links.vlab.digital",
+    "params": {
+      "url": "+1-555-123-4567",
+      "p": "tel",
+      "id": "{{hidden:id}}",
+      "pageid": "YOUR_PAGE_ID"
+    }
+  },
+  "buttonText": "Call Support",
+  "extensions": false,
+  "keepMoving": true
+}
+```
+
+This will generate a link like `tel:+1-555-123-4567` that opens the device's phone dialer when clicked. The click is still tracked with the user's `id` and `pageid` for analytics.
+
+#### Example: Email Link
+
+To create a button that opens the email client:
+
+```json
+{
+  "type": "webview",
+  "url": {
+    "base": "links.vlab.digital",
+    "params": {
+      "url": "support@example.com",
+      "p": "mailto",
+      "id": "{{hidden:id}}",
+      "pageid": "YOUR_PAGE_ID"
+    }
+  },
+  "buttonText": "Email Us",
+  "extensions": false,
+  "keepMoving": true
+}
+```
+
+This generates `mailto:support@example.com` and tracks when users click the email button.
+
+#### Example: SMS Link
+
+To create a button that opens the messaging app:
+
+```json
+{
+  "type": "webview",
+  "url": {
+    "base": "links.vlab.digital",
+    "params": {
+      "url": "+1-555-123-4567",
+      "p": "sms",
+      "id": "{{hidden:id}}",
+      "pageid": "YOUR_PAGE_ID"
+    }
+  },
+  "buttonText": "Text Us",
+  "extensions": false,
+  "keepMoving": true
+}
+```
+
+#### Waiting for Special Link Clicks
+
+You can use wait conditions with special URI schemes just like regular links:
+
+```json
+{
+  "type": "webview",
+  "url": {
+    "base": "links.vlab.digital",
+    "params": {
+      "url": "+1-555-123-4567",
+      "p": "tel",
+      "id": "{{hidden:id}}",
+      "pageid": "YOUR_PAGE_ID"
+    }
+  },
+  "buttonText": "Call Support",
+  "responseMessage": "Please call us to continue",
+  "extensions": false,
+  "wait": {
+    "type": "external",
+    "value": {
+      "type": "linksniffer:click"
+    }
+  }
+}
+```
+
+**Note:** All link clicks through linksniffer are tracked and generate events, regardless of the protocol used. This allows you to track when users initiate phone calls, compose emails, or perform other actions triggered by special URI schemes.
+
 ## Stitch
 
 When stitching from one form to another, the "stitch" must be a statement:
