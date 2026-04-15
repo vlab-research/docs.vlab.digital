@@ -609,6 +609,64 @@ Each item in the `vars` array can be:
 This allows you to create arbitrarily complex logical expressions for your wait conditions.
 
 
+## Recurring Notifications (Marketing Messages)
+
+Recurring Notifications let you send a message to a user **outside the standard 24-hour messaging window** — for example, to notify them of survey results or prize winnings days after the conversation ended.
+
+The user must explicitly opt in during an active conversation. When they do, Facebook provides a reusable token that Fly stores and uses as the message recipient for later sends.
+
+> **Note:** Facebook deprecated message tags (`CONFIRMED_EVENT_UPDATE`, `POST_PURCHASE_UPDATE`, etc.) on April 27, 2026. Recurring Notifications is the official replacement.
+
+### How it works
+
+1. During the survey, Fly sends the user an opt-in request (a button they tap to allow notifications).
+2. The user taps **Allow** (or your configured button text).
+3. Facebook sends a token to Fly, which stores it in the user's state.
+4. Later — after a [timeout]({{< ref "fly/reference/timeouts.md">}}) or external event — Fly sends the follow-up message using that token instead of the user's ID.
+
+### Setting it up
+
+In Typeform, create a **Statement** question, then add the following to the description:
+
+```json
+{
+  "type": "notification_messages",
+  "timezone": "US/Eastern",
+  "ctaText": "GET_UPDATES"
+}
+```
+
+**Configuration options:**
+
+| Field | Required | Default | Notes |
+|-------|----------|---------|-------|
+| `timezone` | No | `UTC` | User's timezone. Used by Facebook for delivery scheduling. Any IANA timezone name (e.g. `US/Pacific`, `Europe/London`). |
+| `ctaText` | No | `ALLOW` | Button label shown to the user. One of: `ALLOW`, `GET`, `GET_UPDATES`, `OPT_IN`, `SIGN_UP`. |
+
+**Title**: The statement's **title** field in Typeform is shown to the user as the notification description (max 65 characters). Facebook enforces a limit of one opt-in request per week per user with the same title.
+
+### Typical survey flow
+
+```
+[Consent questions]
+       ↓
+[Statement] "We'll notify you when your results are ready"
+       ↓
+[Recurring Notifications opt-in] ← user taps "Allow"
+       ↓
+[Wait - timeout: 3 days]
+       ↓
+[Statement] "Your results are in! ..."   ← sent outside the 24h window
+```
+
+The Wait step after the opt-in uses the token automatically — no extra configuration needed. See [Timeouts]({{< ref "fly/reference/timeouts.md">}}) for how to set up the wait.
+
+### Rate limits
+
+- **1 message per 48 hours** per user (enforced by Facebook).
+- Up to 3 messages can be sent within 2 minutes of the first send; messages 2 and 3 are limited to 250 characters each.
+- Tokens persist as long as the user stays opted in. They are revoked if the user blocks, mutes, or opts out.
+
 ## Payment
 
 Read about payment question types under [Incentive Payments]({{< ref "fly/reference/incentive_payments.md">}})
