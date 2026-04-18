@@ -609,6 +609,52 @@ Each item in the `vars` array can be:
 This allows you to create arbitrarily complex logical expressions for your wait conditions.
 
 
+## Utility Message
+
+Sends a pre-approved Facebook **Utility Message template** to the user. Use this for notifications that need to reach the user after the 24-hour Messenger window has closed — survey results, prize notifications, reminders.
+
+> Utility Messages are the current replacement for the deprecated Message Tags (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications. They require no user opt-in but do require a template that Facebook has approved for your Page.
+
+### Setting it up
+
+First, create the template in the dashboard under **Message Templates**. A template is identified by the tuple **(page, name, language)** — the same template name can exist in multiple independently-approved language variants. Use `{{1}}`, `{{2}}`, etc. in the body for positional placeholders.
+
+Then, in Typeform create a **Statement** question and put this in the description:
+
+```json
+{
+  "type": "utility_message",
+  "keepMoving": true,
+  "template": "results_ready",
+  "language": "en_US",
+  "params": ["{{hidden:name}}", "$5"]
+}
+```
+
+**Fields:**
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `template` | Yes | The template name you created in the dashboard. |
+| `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). No silent default — missing `language` is an error. |
+| `params` | No | Positional array of values substituted into `{{1}}`, `{{2}}`, etc. Supports `{{hidden:X}}` interpolation. |
+
+The `params` array is positional: the first element fills `{{1}}`, the second fills `{{2}}`, and so on. Mismatched counts cause a send-time error, so pass exactly as many params as the approved template has placeholders.
+
+### Typical survey flow
+
+Utility messages are usually sent after a long-running Wait — that's when the 24-hour window matters:
+
+```
+[Consent questions]
+       ↓
+[Wait - timeout: 3 days]
+       ↓
+[Utility Message] "Your {{1}} results are in, {{2}}!"   ← sent outside the 24h window
+```
+
+See [Timeouts]({{< ref "fly/reference/timeouts.md">}}) for timeout setup.
+
 ## Payment
 
 Read about payment question types under [Incentive Payments]({{< ref "fly/reference/incentive_payments.md">}})
