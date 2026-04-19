@@ -624,10 +624,10 @@ Then, in Typeform create a **Statement** question and put this in the descriptio
 ```json
 {
   "type": "utility_message",
-  "keepMoving": true,
   "template": "results_ready",
   "language": "en_US",
-  "params": ["{{hidden:name}}", "$5"]
+  "params": ["{{hidden:name}}", "$5"],
+  "buttons": ["yes", "no"]
 }
 ```
 
@@ -638,8 +638,25 @@ Then, in Typeform create a **Statement** question and put this in the descriptio
 | `template` | Yes | The template name you created in the dashboard. |
 | `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). No silent default — missing `language` is an error. |
 | `params` | No | Positional array of values substituted into `{{1}}`, `{{2}}`, etc. Supports `{{hidden:X}}` interpolation. |
+| `buttons` | No | Positional array of **response values**, one per quick-reply button on the approved template. The user sees the template's approved labels; your survey branches on these values. |
 
 The `params` array is positional: the first element fills `{{1}}`, the second fills `{{2}}`, and so on. Mismatched counts cause a send-time error, so pass exactly as many params as the approved template has placeholders.
+
+### With quick-reply buttons
+
+If the template you approved has quick-reply buttons (up to 3, configured when you created it in the dashboard), you almost certainly want the survey to wait for the user's tap rather than moving on — so **don't** set `keepMoving: true` on this field.
+
+When the user taps a button, the tap arrives like any other multiple-choice quick reply and the field's answer becomes whatever you put in `buttons` for that position. Survey logic jumps then branch on that value exactly like they would for a `multiple_choice` answer:
+
+```
+[Utility Message: results_ready]   buttons: ["yes", "no"]
+       ↓
+   logic jump:
+     if answer equals "yes"  → [show results]
+     if answer equals "no"   → [thank and end]
+```
+
+The button **label** (what the user sees) is locked into the approved template. The **value** (what your logic sees) is whatever string you pass in `buttons` for that index. Most authors make them the same; when they differ, the label is the human-facing word and the value is the machine-facing one.
 
 ### Typical survey flow
 
