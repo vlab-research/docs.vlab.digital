@@ -77,18 +77,43 @@ You then go to the dashboard and under the survey settings (click on the shortco
 
 ## Timeouts over 24 hours
 
-You must ask permission from users to follow up with them after 24 hours on Messenger.
+Messenger only lets you send a normal message within 24 hours of the user's last activity. To send anything after that — survey results, prize notifications, reminders — you need a **Utility Message template**, pre-approved by Facebook for your Page.
 
-If you have done that, you can put the following in the next message and make the timeout > 24 hours:
+> Earlier approaches (Message Tags like `CONFIRMED_EVENT_UPDATE`, and Recurring Notifications) were deprecated by Facebook in early 2026. Utility Messages are the current, globally-available replacement and require **no user opt-in**.
 
-After a timeout, you need to tag the next message as follows:
+### 1. Create the template in the dashboard
 
-JSON:
+In the dashboard, go to **Message Templates → Create Template**. Pick the page, name the template in `snake_case`, pick a language, and write the body. Use `{{1}}`, `{{2}}`, etc. for any values you will fill in at send time (e.g. the user's name).
+
+**Add quick-reply buttons** if you want users to tap instead of typing — this is almost always what you want, since free text after a long wait creates friction and is hard to branch on. Up to 3 buttons, labels locked at approval.
+
+A template is identified by the tuple **(page, name, language)** — the same name can exist in multiple independently-approved language variants. If your survey runs in multiple languages, create the same template name once per language.
+
+Facebook typically auto-approves custom utility templates in seconds. Wait until the row shows **Approved** before using it.
+
+### 2. Use it in the survey after a long wait
+
+Set up your wait step as described above (any timeout over 24 hours), then make the next field a `utility_message`:
+
 ```json
 {
-    "sendParams": {
-        "tag": "CONFIRMED_EVENT_UPDATE",
-        "messaging_type": "MESSAGE_TAG"
-    }
+  "type": "utility_message",
+  "template": "results_ready",
+  "language": "en_US",
+  "params": ["{{hidden:name}}", "$5"],
+  "buttons": ["yes", "no"]
 }
 ```
+
+**Fields:**
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `template` | Yes | The template name you created in the dashboard. |
+| `language` | Yes | The locale you approved for this template variant (e.g. `en_US`, `es_LA`, `ha`). Must match exactly. No silent default — a missing language is an error. |
+| `params` | No | Positional array of values substituted into `{{1}}`, `{{2}}`, etc. in template order. Supports `{{hidden:X}}` interpolation. |
+| `buttons` | No | Positional array of response values, one per quick-reply button on the approved template. The user sees the template's labels; your survey branches on these values. Omit for text-only templates. |
+
+The `params` array corresponds 1-to-1 with the `{{N}}` placeholders in the body: the first element fills `{{1}}`, the second fills `{{2}}`, and so on. If your template body has 3 placeholders, pass 3 params.
+
+When the template has buttons, leave `keepMoving` off (or `false`) so the survey waits for the user's tap. A tap lands on the field as a normal answer and survey logic jumps can branch on it — see the [Utility Message question type]({{< ref "fly/reference/questions.md">}}#utility-message) for details.

@@ -609,6 +609,71 @@ Each item in the `vars` array can be:
 This allows you to create arbitrarily complex logical expressions for your wait conditions.
 
 
+## Utility Message
+
+Sends a pre-approved Facebook **Utility Message template** to the user. Use this for notifications that need to reach the user after the 24-hour Messenger window has closed — survey results, prize notifications, reminders.
+
+> Utility Messages are the current replacement for the deprecated Message Tags (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications. They require no user opt-in but do require a template that Facebook has approved for your Page.
+
+### Setting it up
+
+First, create the template in the dashboard under **Message Templates**. A template is identified by the tuple **(page, name, language)** — the same template name can exist in multiple independently-approved language variants. Use `{{1}}`, `{{2}}`, etc. in the body for positional placeholders; numbering must start at `{{1}}` and be sequential.
+
+If your body contains any placeholders, the dashboard will prompt you for a **sample value** for each one. These are shown to Facebook reviewers at approval time so they can judge whether the template's content (with realistic values plugged in) is truly utility and not promotional. The samples are **not** used at send time — the real values come from `params` in your survey JSON.
+
+Then, in Typeform create a **Statement** question and put this in the description:
+
+```json
+{
+  "type": "utility_message",
+  "template": "results_ready",
+  "language": "en_US",
+  "params": ["{{hidden:name}}", "$5"],
+  "buttons": ["yes", "no"]
+}
+```
+
+**Fields:**
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `template` | Yes | The template name you created in the dashboard. |
+| `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). No silent default — missing `language` is an error. |
+| `params` | No | Positional array of values substituted into `{{1}}`, `{{2}}`, etc. Supports `{{hidden:X}}` interpolation. |
+| `buttons` | No | Positional array of **response values**, one per quick-reply button on the approved template. The user sees the template's approved labels; your survey branches on these values. |
+
+The `params` array is positional: the first element fills `{{1}}`, the second fills `{{2}}`, and so on. Mismatched counts cause a send-time error, so pass exactly as many params as the approved template has placeholders.
+
+### With quick-reply buttons
+
+If the template you approved has quick-reply buttons (up to 3, configured when you created it in the dashboard), you almost certainly want the survey to wait for the user's tap rather than moving on — so **don't** set `keepMoving: true` on this field.
+
+When the user taps a button, the tap arrives like any other multiple-choice quick reply and the field's answer becomes whatever you put in `buttons` for that position. Survey logic jumps then branch on that value exactly like they would for a `multiple_choice` answer:
+
+```
+[Utility Message: results_ready]   buttons: ["yes", "no"]
+       ↓
+   logic jump:
+     if answer equals "yes"  → [show results]
+     if answer equals "no"   → [thank and end]
+```
+
+The button **label** (what the user sees) is locked into the approved template. The **value** (what your logic sees) is whatever string you pass in `buttons` for that index. Most authors make them the same; when they differ, the label is the human-facing word and the value is the machine-facing one.
+
+### Typical survey flow
+
+Utility messages are usually sent after a long-running Wait — that's when the 24-hour window matters:
+
+```
+[Consent questions]
+       ↓
+[Wait - timeout: 3 days]
+       ↓
+[Utility Message] "Your {{1}} results are in, {{2}}!"   ← sent outside the 24h window
+```
+
+See [Timeouts]({{< ref "fly/reference/timeouts.md">}}) for timeout setup.
+
 ## Payment
 
 Read about payment question types under [Incentive Payments]({{< ref "fly/reference/incentive_payments.md">}})
