@@ -617,7 +617,9 @@ Sends a pre-approved Facebook **Utility Message template** to the user. Use this
 
 ### Setting it up
 
-First, create the template in the dashboard under **Message Templates**. A template is identified by the tuple **(page, name, language)** — the same template name can exist in multiple independently-approved language variants. Use `{{1}}`, `{{2}}`, etc. in the body for positional placeholders.
+First, create the template in the dashboard under **Message Templates**. A template is identified by the tuple **(page, name, language)** — the same template name can exist in multiple independently-approved language variants. Use `{{1}}`, `{{2}}`, etc. in the body for positional placeholders; numbering must start at `{{1}}` and be sequential.
+
+If your body contains any placeholders, the dashboard will prompt you for a **sample value** for each one. These are shown to Facebook reviewers at approval time so they can judge whether the template's content (with realistic values plugged in) is truly utility and not promotional. The samples are **not** used at send time — the real values come from `params` in your survey JSON.
 
 Then, in Typeform create a **Statement** question and put this in the description:
 
