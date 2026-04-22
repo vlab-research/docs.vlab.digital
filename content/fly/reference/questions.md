@@ -660,8 +660,6 @@ If the template has buttons (up to 3, configured when you created it in the dash
      if answer equals "no"   → [thank and end]
 ```
 
-You almost certainly want the survey to wait for the user's tap rather than moving on — so **don't** set `keepMoving: true` on this question.
-
 **Important**: the button **labels are locked at the template's approval time** (Facebook doesn't allow editing an approved template). The `value` the survey branches on is always the same as the label — the approved template bakes that in. So your Multiple Choice's choice labels must match the template's button labels exactly. If they differ, or if the choice count differs from the template's button count, the send will fail.
 
 ### Typical survey flow
