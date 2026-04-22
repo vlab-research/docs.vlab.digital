@@ -621,15 +621,19 @@ First, create the template in the dashboard under **Message Templates**. A templ
 
 If your body contains any placeholders, the dashboard will prompt you for a **sample value** for each one. These are shown to Facebook reviewers at approval time so they can judge whether the template's content (with realistic values plugged in) is truly utility and not promotional. The samples are **not** used at send time — the real values come from `params` in your survey JSON.
 
-Then, in Typeform create a **Statement** question and put this in the description:
+Then, in Typeform create the question:
+
+- If the template is **text-only**, use a **Statement** question.
+- If the template has **buttons**, use a **Multiple Choice** question and set its choices to match the template's approved button labels. This is how Typeform's native logic editor knows how to branch on the answer.
+
+Put the utility-message metadata in the question's description as JSON (or YAML):
 
 ```json
 {
   "type": "utility_message",
   "template": "results_ready",
   "language": "en_US",
-  "params": ["{{hidden:name}}", "$5"],
-  "buttons": ["yes", "no"]
+  "params": ["{{hidden:name}}", "$5"]
 }
 ```
 
@@ -640,25 +644,25 @@ Then, in Typeform create a **Statement** question and put this in the descriptio
 | `template` | Yes | The template name you created in the dashboard. |
 | `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). No silent default — missing `language` is an error. |
 | `params` | No | Positional array of values substituted into `{{1}}`, `{{2}}`, etc. Supports `{{hidden:X}}` interpolation. |
-| `buttons` | No | Positional array of **response values**, one per quick-reply button on the approved template. The user sees the template's approved labels; your survey branches on these values. |
 
 The `params` array is positional: the first element fills `{{1}}`, the second fills `{{2}}`, and so on. Mismatched counts cause a send-time error, so pass exactly as many params as the approved template has placeholders.
 
-### With quick-reply buttons
+### With buttons — wire through `multiple_choice`
 
-If the template you approved has quick-reply buttons (up to 3, configured when you created it in the dashboard), you almost certainly want the survey to wait for the user's tap rather than moving on — so **don't** set `keepMoving: true` on this field.
-
-When the user taps a button, the tap arrives like any other multiple-choice quick reply and the field's answer becomes whatever you put in `buttons` for that position. Survey logic jumps then branch on that value exactly like they would for a `multiple_choice` answer:
+If the template has buttons (up to 3, configured when you created it in the dashboard), use a **Multiple Choice** question type and define the question's choices to have the same labels as the approved template's buttons — in the same order. The translator will emit one button component per choice and Typeform's native logic editor will branch on the tapped answer automatically.
 
 ```
-[Utility Message: results_ready]   buttons: ["yes", "no"]
+[Multiple Choice question]   description: {type: utility_message, template: results_ready, ...}
+                             choices: [ "yes", "no" ]
        ↓
    logic jump:
      if answer equals "yes"  → [show results]
      if answer equals "no"   → [thank and end]
 ```
 
-The button **label** (what the user sees) is locked into the approved template. The **value** (what your logic sees) is whatever string you pass in `buttons` for that index. Most authors make them the same; when they differ, the label is the human-facing word and the value is the machine-facing one.
+You almost certainly want the survey to wait for the user's tap rather than moving on — so **don't** set `keepMoving: true` on this question.
+
+**Important**: the button **labels are locked at the template's approval time** (Facebook doesn't allow editing an approved template). The `value` the survey branches on is always the same as the label — the approved template bakes that in. So your Multiple Choice's choice labels must match the template's button labels exactly. If they differ, or if the choice count differs from the template's button count, the send will fail.
 
 ### Typical survey flow
 
