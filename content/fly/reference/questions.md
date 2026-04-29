@@ -615,18 +615,27 @@ Sends a pre-approved Facebook **Utility Message template** to the user. Use this
 
 > Utility Messages are the current replacement for the deprecated Message Tags (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications. They require no user opt-in but do require a template that Facebook has approved for your Page.
 
-### Setting it up
+### 1. Create the template in the dashboard
 
-First, create the template in the dashboard under **Message Templates**. A template is identified by the tuple **(page, name, language)** — the same template name can exist in multiple independently-approved language variants. Use `{{1}}`, `{{2}}`, etc. in the body for positional placeholders; numbering must start at `{{1}}` and be sequential.
+Go to **Message Templates** in the dashboard. A template is identified by the tuple **(page, name, language)** — the same template name can exist in multiple independently-approved language variants, each created and approved separately.
 
-If your body contains any placeholders, the dashboard will prompt you for a **sample value** for each one. These are shown to Facebook reviewers at approval time so they can judge whether the template's content (with realistic values plugged in) is truly utility and not promotional. The samples are **not** used at send time — the real values come from `params` in your survey JSON.
+| Field | Constraint |
+|-------|-----------|
+| Name | `snake_case` — lowercase letters, digits, underscores. Unique per (page, language). |
+| Language | Must be an exact Facebook-supported locale (`en_US`, `es_LA`, `ha`, …). |
+| Body | Up to **1024 characters**. Use `{{1}}`, `{{2}}`, … for positional placeholders. Numbering must start at `{{1}}` and be sequential. |
+| Buttons | Optional. Up to **3 buttons**. Each label is **≤ 20 characters** and unique within the template. Buttons are **POSTBACK** buttons — they stay visible in the chat until the user taps one. |
 
-Then, in Typeform create the question:
+If your body contains placeholders, the dashboard will prompt for a **sample value** per placeholder. Facebook reviewers see the body with these values substituted in — that's how they judge whether the content is truly utility and not promotional. Samples are **not** used at send time; real values come from `params` in your survey JSON.
 
-- If the template is **text-only**, use a **Statement** question.
-- If the template has **buttons**, use a **Multiple Choice** question and set its choices to match the template's approved button labels. This is how Typeform's native logic editor knows how to branch on the answer.
+> **Approved templates can't be edited.** To change wording or buttons, delete and recreate. Approval is usually fast (seconds), but Facebook may reject content it considers promotional.
 
-Put the utility-message metadata in the question's description as JSON (or YAML):
+### 2. Add the question in Typeform
+
+- **Text-only template** → use a **Statement** question.
+- **Template with buttons** → use a **Multiple Choice** question whose choices match the template's approved button labels (same labels, same order, same count). Typeform's native logic editor reads those choices to drive branching.
+
+Put the utility-message metadata in the question's description as JSON (or YAML — both work):
 
 ```json
 {
@@ -641,26 +650,25 @@ Put the utility-message metadata in the question's description as JSON (or YAML)
 
 | Field | Required | Notes |
 |-------|----------|-------|
+| `type` | Yes | Always `utility_message`. |
 | `template` | Yes | The template name you created in the dashboard. |
 | `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). No silent default — missing `language` is an error. |
-| `params` | No | Positional array of values substituted into `{{1}}`, `{{2}}`, etc. Supports `{{hidden:X}}` interpolation. |
+| `params` | Only if the body has placeholders | Positional array of values substituted into `{{1}}`, `{{2}}`, …. Supports `{{hidden:X}}` interpolation. Length must equal the placeholder count exactly. |
 
-The `params` array is positional: the first element fills `{{1}}`, the second fills `{{2}}`, and so on. Mismatched counts cause a send-time error, so pass exactly as many params as the approved template has placeholders.
+### Branching on a button tap
 
-### With buttons — wire through `multiple_choice`
-
-If the template has buttons (up to 3, configured when you created it in the dashboard), use a **Multiple Choice** question type and define the question's choices to have the same labels as the approved template's buttons — in the same order. The translator will emit one button component per choice and Typeform's native logic editor will branch on the tapped answer automatically.
+Define the Multiple Choice's choice labels to **exactly match** the approved template's button labels — same labels, same order, same count. The approved template bakes in `value == label` per button, so the value Typeform's logic editor sees on a tap is the same string as the label the user pressed:
 
 ```
-[Multiple Choice question]   description: {type: utility_message, template: results_ready, ...}
-                             choices: [ "yes", "no" ]
+[Multiple Choice question]   description: {"type": "utility_message", "template": "results_ready", ...}
+                             choices: [ "Yes", "No" ]
        ↓
    logic jump:
-     if answer equals "yes"  → [show results]
-     if answer equals "no"   → [thank and end]
+     if answer equals "Yes" → [show results]
+     if answer equals "No"  → [thank and end]
 ```
 
-**Important**: the button **labels are locked at the template's approval time** (Facebook doesn't allow editing an approved template). The `value` the survey branches on is always the same as the label — the approved template bakes that in. So your Multiple Choice's choice labels must match the template's button labels exactly. If they differ, or if the choice count differs from the template's button count, the send will fail.
+If the choice labels don't match, or the count differs from the template's button count, the send will fail — Facebook validates the parameter count against the approved button count.
 
 ### Typical survey flow
 
@@ -675,6 +683,17 @@ Utility messages are usually sent after a long-running Wait — that's when the 
 ```
 
 See [Timeouts]({{< ref "fly/reference/timeouts.md">}}) for timeout setup.
+
+### Common rejection / send errors
+
+| What you see | What it usually means |
+|---|---|
+| Template stays `PENDING` indefinitely | Refresh the page; if still stuck after an hour, delete and recreate. |
+| Rejected: "promotional" / `TAG_SHOULD_BE_MARKETING` | Facebook classified the body as marketing. Rewrite to be transactional — confirmations, reminders, results — and remove calls-to-action like "Claim now!". |
+| Rejected: `TEMPLATE_VARIABLES_MISSING_SAMPLE_VALUES` | A `{{N}}` placeholder in the body has no sample value. Provide one in the dashboard form, or remove the placeholder. |
+| Send fails with "template not found" | The `(template, language)` pair in your survey JSON doesn't match any APPROVED row. Check spelling and create the missing language variant. |
+| Send fails with "placeholder count mismatch" | The `params` array length doesn't match the number of `{{N}}` placeholders in the body. Count and align. |
+| Button-tap question has fewer/more choices than the approved template | The Multiple Choice's choices count must equal the approved button count exactly. |
 
 ## Payment
 
