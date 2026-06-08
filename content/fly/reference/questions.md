@@ -701,29 +701,45 @@ Read about payment question types under [Incentive Payments]({{< ref "fly/refere
 
 ## Passing Thread Control
 
-To pass thread control to another app, tag your final question with the following:
+To hand the conversation off to another Facebook app (a "secondary receiver" in
+Facebook's handover protocol), tag a question with a `handoff`:
 
 ```json
 {
   "handoff": {
     "target_app_id": "123456789",
-    "metadata": { "return_app_id": "987765432" }
+    "metadata": { "check": "my_handoff" }
   }
 }
 ```
 
-If you would like to pass control, then wait for it to come back before proceeding to the next question, you can combine this with a wait event:
+The `metadata` object is delivered to the other app when control is passed.
 
+### Waiting for control to come back
+
+Usually you want to pass control, wait for the other app to hand it back, and
+only then continue the survey. To do this you **must** set `"type": "wait"` on
+the question and add a `handover` wait condition — combine the two:
 
 ```json
 {
+  "type": "wait",
+  "wait": { "type": "handover" },
   "handoff": {
     "target_app_id": "123456789",
-    "metadata": { "return_app_id": "987765432" }
-  }
-  "wait": {
-    "type": "handover",
-    "value": { "target_app_id": "123456789" }
+    "metadata": { "check": "my_handoff" }
   }
 }
 ```
+
+`"type": "wait"` is required. Without it the question is treated as a plain
+statement: the handoff still fires, but the wait is never armed, so the survey
+will **not** resume when control returns. The bare `{ "type": "handover" }`
+condition is fulfilled by any handover that hands control back to your app.
+
+When control comes back, any `metadata` the other app includes in its
+`pass_thread_control` call is flattened into hidden fields prefixed
+`e_handover_metadata_`. For example, if the returning app sends
+`metadata: { "status": "ok", "answer": "blue" }`, later questions can reference
+`{{hidden:e_handover_metadata_status}}` and `{{hidden:e_handover_metadata_answer}}`
+(the app id that regained control is available as `{{hidden:e_handover_target_app_id}}`).
