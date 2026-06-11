@@ -699,43 +699,48 @@ See [Timeouts]({{< ref "fly/reference/timeouts.md">}}) for timeout setup.
 
 Read about payment question types under [Incentive Payments]({{< ref "fly/reference/incentive_payments.md">}})
 
-## Passing Thread Control
+## Passing Thread Control (Handoff)
 
 To hand the conversation off to another Facebook app (a "secondary receiver" in
-Facebook's handover protocol), tag a question with a `handoff`:
+Facebook's handover protocol), use `type: handoff` with a `handoff` block:
 
 ```json
 {
+  "type": "handoff",
   "handoff": {
     "target_app_id": "123456789",
+    "mode": "wait",
     "metadata": { "check": "my_handoff" }
   }
 }
 ```
+
+**Fields:**
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `type` | Yes | Always `handoff`. |
+| `handoff.target_app_id` | Yes | The Facebook app ID of the external app to hand control to. |
+| `handoff.mode` | No | `wait` (default) — the survey waits for control to come back, then resumes. |
+| `handoff.metadata` | No | Delivered to the other app when control is passed. |
 
 The `metadata` object is delivered to the other app when control is passed.
 
-### Waiting for control to come back
+### How it works
 
-Usually you want to pass control, wait for the other app to hand it back, and
-only then continue the survey. To do this you **must** set `"type": "wait"` on
-the question and add a `handover` wait condition — combine the two:
+When the survey reaches a handoff field:
 
-```json
-{
-  "type": "wait",
-  "wait": { "type": "handover" },
-  "handoff": {
-    "target_app_id": "123456789",
-    "metadata": { "check": "my_handoff" }
-  }
-}
-```
+1. The handoff message is sent to the user (as text from the question title).
+2. The echo of that message arms the wait and passes thread control to the
+   `target_app_id`.
+3. The survey enters a wait state until the other app hands control back.
+4. When control returns, the survey resumes at the next question.
 
-`"type": "wait"` is required. Without it the question is treated as a plain
-statement: the handoff still fires, but the wait is never armed, so the survey
-will **not** resume when control returns. The bare `{ "type": "handover" }`
-condition is fulfilled by any handover that hands control back to your app.
+You do **not** need to add a `wait` condition — the wait for the handback is
+synthesized automatically. Simply declare `type: handoff` and the `handoff`
+block.
+
+### Metadata from the returning app
 
 When control comes back, any `metadata` the other app includes in its
 `pass_thread_control` call is flattened into hidden fields prefixed
@@ -743,3 +748,9 @@ When control comes back, any `metadata` the other app includes in its
 `metadata: { "status": "ok", "answer": "blue" }`, later questions can reference
 `{{hidden:e_handover_metadata_status}}` and `{{hidden:e_handover_metadata_answer}}`
 (the app id that regained control is available as `{{hidden:e_handover_target_app_id}}`).
+
+### External app requirements
+
+The external app must be configured as a **Secondary Receiver** on the
+Facebook Page. To hand control back, it calls Facebook's
+`pass_thread_control` API with `target_app_id` set to the Fly replybot app ID.
