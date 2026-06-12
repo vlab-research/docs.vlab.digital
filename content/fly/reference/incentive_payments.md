@@ -20,13 +20,13 @@ JSON:
         "provider": "reloadly",
         "key": "name-of-your-credentials",
         "details": {
-            "mobile": @MOBILE_QUESTION,
+            "mobile": "{{field:MOBILE_QUESTION|e164}}",
             "operator": @OPERATOR_QUESTION,
             "amount": 100,
             "tolerance": 30,
             "country": "IN",
             "id": "PAYMENT_ID",
-            "custom_identifier": "CUSTOM_IDENTIFIER",
+            "custom_identifier": "survey_x_{{field:MOBILE_QUESTION|e164}}_1",
         }
     }
 }
@@ -38,6 +38,7 @@ Notes:
 2. `PAYMENT_ID` can be useful to keep track of multiple payments to the same person or different payments to different treatment arms (a unique id per treatment arm). You need to have the same PAYMENT_ID for both the "wait" and the "payment" blocks.
 3. the `key` is the name you give the desired Reloadly credentials in the Fly dashboard.
 4. `CUSTOM_IDENTIFIER` is a unique string that ensures that no payment is repeated. For example, if you only want to provide a payment to each phone once, you can make this a combination of the shortcode and the phone number.
+5. Phone number answers may contain trailing text (e.g. `+254712345678 use this`). Use the `|e164` transform to normalize phone numbers to E.164 format before they reach the payment provider. This is especially important for `custom_identifier` — without normalization, two submissions of the same number with different trailing text produce different identifiers, breaking duplicate payment detection. See [Interpolation Transforms]({{< ref "fly/reference/hidden.md#interpolation-transforms" >}}) for details.
 
 You will have the following hidden fields that can be used for logic and error messages:
 
@@ -69,7 +70,7 @@ JSON:
             "method": "POST",
             "url": "https://mypaymentprovider.com/send/money",
             "headers": {"Authorization": "Bearer << MYPROVIDER_TOKEN >>"},
-            "body": { "phone": "@MOBILE_QUESTION", "amount": 100, "transaction_id": "survey_x_payment_1" },
+            "body": { "phone": "{{field:MOBILE_QUESTION|e164}}", "amount": 100, "transaction_id": "survey_x_payment_1" },
             "errorMessage": "path.to.error.message"
         }
     }
