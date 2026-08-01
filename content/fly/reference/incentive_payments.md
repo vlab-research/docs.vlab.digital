@@ -86,8 +86,9 @@ Notes:
 2. `PAYMENT_ID` can be useful to keep track of multiple payments to the same person
    or different payments to different treatment arms. You need the same PAYMENT_ID
    in both the "wait" and the "payment" blocks.
-3. the `key` is the name given to the DingConnect credentials (see
-   [Setting up DingConnect credentials](#setting-up-dingconnect-credentials) below).
+3. the `key` is the name of the Generic Secret holding your DingConnect API key
+   (see [Setting up your DingConnect API key](#setting-up-your-dingconnect-api-key)
+   below).
 4. `sku_code` identifies exactly what is being sent — a specific amount from a
    specific operator. See [Finding a SKU code](#finding-a-sku-code) below.
 5. **`distributor_ref` is what prevents double payments.** DingConnect rejects a
@@ -179,71 +180,40 @@ dingconnect send --sku 2ANG44349 --value 12.08 \
   --account 2348031234567 --ref test-001
 ```
 
-### Setting up DingConnect credentials
+### Setting up your DingConnect API key
 
-{{< hint type="warning" >}}
-**This cannot yet be done from the dashboard.** Unlike Reloadly, DingConnect has no
-"Connected Accounts" screen, and it does **not** use Generic Secrets — those are a
-different credential type that only the [Generic HTTP
-provider](#payment---generic-http-payment-endpoint) can read. Ask an administrator
-to add your credentials for you.
-{{< /hint >}}
+DingConnect uses a **Generic Secret**, so you can set it up yourself — there is no
+separate DingConnect screen to find.
 
-Generate an API key in your DingConnect account under **Account Settings →
-Developer**, then have an administrator store it against your user with the name
-you will use as `key` in your survey:
+1. In DingConnect, go to **Account Settings → Developer** and generate an API key.
+2. In the Fly dashboard, open **Connected Accounts** and create a new **Generic
+   Secret**. Give it any variable name you like — `DINGCONNECT_API_KEY` is a
+   sensible choice — and paste the API key as the value.
+3. In your survey, set `payment.key` to that same variable name:
 
-``` sql
-INSERT INTO credentials (userid, entity, key, details)
-VALUES (
-  'your-user-id',
-  'dingconnect',
-  'name-of-your-credentials',
-  '{"api_key": "your_dingconnect_api_key"}'
-);
+``` json
+"payment": {
+    "provider": "dingconnect",
+    "key": "DINGCONNECT_API_KEY",
+    "details": { ... }
+}
 ```
 
-The `key` is a label you choose. Use it as the `key` field in the survey JSON, which
-lets one account hold several DingConnect keys for different studies.
+The name is yours to choose, so one account can hold several DingConnect keys for
+different studies — just point each survey at the right one.
+
+Note that `key` names the secret; it does not contain the API key. Never paste the
+key itself into the survey, which is shared with your collaborators and may be made
+public.
+
+If the name in `payment.key` doesn't match a secret you've created, the payment
+fails with an error saying which secret was missing, so check that first if
+payments fail immediately.
 
 If your account has no funds, every payment fails with
 `e_payment_dingconnect_error_code` set to `InsufficientBalance`, no matter how
 correct the survey is. Check the balance with `dingconnect balance` before
 debugging anything else.
-
-### Using DingConnect without an administrator
-
-If you cannot wait for credentials to be added, you can reach DingConnect through
-the [Generic HTTP provider](#payment---generic-http-payment-endpoint) instead, in
-the same way as Tremendous below. Create a Generic Secret named
-`DINGCONNECT_API_KEY` under Connected Accounts, then:
-
-``` json
-"payment": {
-    "provider": "http",
-    "details": {
-        "id": "PAYMENT_ID",
-        "method": "POST",
-        "url": "https://api.dingconnect.com/api/V1/SendTransfer",
-        "headers": {
-            "api_key": "<< DINGCONNECT_API_KEY >>",
-            "Content-Type": "application/json"
-        },
-        "body": {
-            "SkuCode": "2ANG44349",
-            "SendValue": 12.08,
-            "AccountNumber": "{{field:MOBILE_QUESTION|e164}}",
-            "DistributorRef": "survey_x_{{field:MOBILE_QUESTION|e164}}_1"
-        },
-        "errorMessage": "ErrorCodes.0.Code"
-    }
-}
-```
-
-Note the field names are capitalised here (`SkuCode`, not `sku_code`) because you
-are talking to DingConnect's API directly rather than through Fly. The native
-provider above is preferable where possible: it gives clearer error messages and
-does not require you to match DingConnect's format by hand.
 
 ## Payment - Generic HTTP Payment Endpoint
 
