@@ -48,6 +48,203 @@ You will have the following hidden fields that can be used for logic and error m
 
 
 
+## Payment - DingConnect
+
+[DingConnect](https://www.dingconnect.com) sends mobile airtime, data bundles, and
+utility top-ups in most countries. Unlike Tremendous, it is a native provider, so
+Fly maps its errors into readable messages for you.
+
+JSON:
+``` json
+{
+    "type": "wait",
+    "wait": {
+        "type": "external",
+        "value": {
+            "type": "payment:dingconnect",
+            "id": "PAYMENT_ID"
+        }
+    },
+    "payment": {
+        "provider": "dingconnect",
+        "key": "name-of-your-credentials",
+        "details": {
+            "id": "PAYMENT_ID",
+            "sku_code": "MTNG10",
+            "send_value": 5.00,
+            "send_currency_iso": "USD",
+            "account_number": "{{field:MOBILE_QUESTION|e164}}",
+            "distributor_ref": "survey_x_{{field:MOBILE_QUESTION|e164}}_1"
+        }
+    }
+}
+```
+
+Notes:
+
+1. The "wait" is not strictly necessary but likely desired!
+2. `PAYMENT_ID` can be useful to keep track of multiple payments to the same person
+   or different payments to different treatment arms. You need the same PAYMENT_ID
+   in both the "wait" and the "payment" blocks.
+3. the `key` is the name given to the DingConnect credentials (see
+   [Setting up DingConnect credentials](#setting-up-dingconnect-credentials) below).
+4. `sku_code` identifies exactly what is being sent — a specific amount from a
+   specific operator. See [Finding a SKU code](#finding-a-sku-code) below.
+5. **`distributor_ref` is what prevents double payments.** DingConnect rejects a
+   repeated `distributor_ref` instead of sending twice, so make it unique per person
+   per payment — a combination of your shortcode and the phone number works well. It
+   plays the same role that `custom_identifier` does for Reloadly. If you make it
+   change between attempts (by putting a timestamp or random value in it), a retried
+   payment **will** be sent twice.
+6. `send_currency_iso` is optional and defaults to USD.
+7. Phone number answers may contain trailing text (e.g. `+254712345678 use this`).
+   Use the `|e164` transform to normalize them before they reach the payment
+   provider. This matters most for `distributor_ref` — without normalization, two
+   submissions of the same number with different trailing text produce different
+   references, which defeats the duplicate protection described above. See
+   [Interpolation Transforms]({{< ref "fly/reference/hidden.md#interpolation-transforms" >}}).
+
+You will have the following hidden fields that can be used for logic and error messages:
+
+1. `e_payment_dingconnect_success` - will be "true" if the payment succeeded.
+2. `e_payment_dingconnect_error_message` - an error message describing why it failed.
+3. `e_payment_dingconnect_error_code` - DingConnect's own error code, e.g.
+   `AccountNumberInvalid` or `InsufficientBalance`. Useful for branching on the
+   reason: `AccountNumberInvalid` means you should re-ask for the number, while
+   `InsufficientBalance` means your account needs funding and re-asking will not help.
+4. `e_payment_dingconnect_id` - the PAYMENT_ID
+
+### Some products need extra information
+
+Some products — utility top-ups especially — need more than a phone number. An
+electricity product may require a meter ID. Pass these with `settings`:
+
+``` json
+"details": {
+    "id": "PAYMENT_ID",
+    "sku_code": "NG_4X_TopUp",
+    "send_value": 5.00,
+    "account_number": "{{field:MOBILE_QUESTION|e164}}",
+    "distributor_ref": "survey_x_{{field:MOBILE_QUESTION|e164}}_1",
+    "settings": [
+        {"name": "MeterId", "value": "{{field:METER_QUESTION}}"}
+    ]
+}
+```
+
+If a product requires a setting and you leave it out, the payment fails. The CLI
+below shows which settings each product requires.
+
+### Finding a SKU code
+
+`sku_code` is the single most important field to get right, and it is not
+guessable. Use the
+[go-dingconnect](https://github.com/vlab-research/go-dingconnect) CLI to browse the
+catalogue:
+
+``` sh
+go install github.com/vlab-research/go-dingconnect/cmd/dingconnect@latest
+
+export DINGCONNECT_API_KEY=your_key
+
+# Which operators exist in a country?
+dingconnect providers --country NG
+
+# What can be sent, at what price?
+dingconnect products --country NG --provider MTNG
+```
+
+```
+SKU          PROVIDER  SEND             RECEIVE                COMM  MODE     REQUIRES
+NG_4X_TopUp  4XNG      2.00-105.00 USD  2246.29-117930.31 NGN  3.0%  Instant  MeterId
+2ANG44349    2ANG      12.08 USD        10.00 USD              3.0%  Instant
+```
+
+`SEND` is what your account is charged; `RECEIVE` is what the participant gets. A
+range means the product accepts any amount between those bounds, so `send_value`
+must fall inside it. A single figure means the amount is fixed and any other
+`send_value` is rejected. `REQUIRES` lists the mandatory `settings` for that product.
+
+You can also check which operator a specific number belongs to:
+
+``` sh
+dingconnect lookup +2348031234567
+```
+
+And confirm a payment would work before putting it in a survey. This validates
+everything and checks your balance without sending money or spending anything:
+
+``` sh
+dingconnect send --sku 2ANG44349 --value 12.08 \
+  --account 2348031234567 --ref test-001
+```
+
+### Setting up DingConnect credentials
+
+{{< hint type="warning" >}}
+**This cannot yet be done from the dashboard.** Unlike Reloadly, DingConnect has no
+"Connected Accounts" screen, and it does **not** use Generic Secrets — those are a
+different credential type that only the [Generic HTTP
+provider](#payment---generic-http-payment-endpoint) can read. Ask an administrator
+to add your credentials for you.
+{{< /hint >}}
+
+Generate an API key in your DingConnect account under **Account Settings →
+Developer**, then have an administrator store it against your user with the name
+you will use as `key` in your survey:
+
+``` sql
+INSERT INTO credentials (userid, entity, key, details)
+VALUES (
+  'your-user-id',
+  'dingconnect',
+  'name-of-your-credentials',
+  '{"api_key": "your_dingconnect_api_key"}'
+);
+```
+
+The `key` is a label you choose. Use it as the `key` field in the survey JSON, which
+lets one account hold several DingConnect keys for different studies.
+
+If your account has no funds, every payment fails with
+`e_payment_dingconnect_error_code` set to `InsufficientBalance`, no matter how
+correct the survey is. Check the balance with `dingconnect balance` before
+debugging anything else.
+
+### Using DingConnect without an administrator
+
+If you cannot wait for credentials to be added, you can reach DingConnect through
+the [Generic HTTP provider](#payment---generic-http-payment-endpoint) instead, in
+the same way as Tremendous below. Create a Generic Secret named
+`DINGCONNECT_API_KEY` under Connected Accounts, then:
+
+``` json
+"payment": {
+    "provider": "http",
+    "details": {
+        "id": "PAYMENT_ID",
+        "method": "POST",
+        "url": "https://api.dingconnect.com/api/V1/SendTransfer",
+        "headers": {
+            "api_key": "<< DINGCONNECT_API_KEY >>",
+            "Content-Type": "application/json"
+        },
+        "body": {
+            "SkuCode": "2ANG44349",
+            "SendValue": 12.08,
+            "AccountNumber": "{{field:MOBILE_QUESTION|e164}}",
+            "DistributorRef": "survey_x_{{field:MOBILE_QUESTION|e164}}_1"
+        },
+        "errorMessage": "ErrorCodes.0.Code"
+    }
+}
+```
+
+Note the field names are capitalised here (`SkuCode`, not `sku_code`) because you
+are talking to DingConnect's API directly rather than through Fly. The native
+provider above is preferable where possible: it gives clearer error messages and
+does not require you to match DingConnect's format by hand.
+
 ## Payment - Generic HTTP Payment Endpoint
 
 This allows you to send payments to an external API via any http request.
