@@ -83,9 +83,10 @@ A statement is a simple message that you send. The bot will move on to the next 
 
 In Typeform, pick "Statement"
 
-## Image
+## Attachments: Image, Video, Audio, Document
 
-For an image you can use a URL:
+An attachment question sends a file to the respondent. All four kinds share one
+shape — only `attachment.type` changes:
 
 JSON:
 ```json
@@ -93,50 +94,99 @@ JSON:
  "keepMoving": true,
  "attachment": {
     "type": "image",
-    "url": "https://i.imgur.com/ZSHauqq.png"
+    "url": "https://media.vlab.digital/a/550e8400-e29b-41d4-a716-446655440000/welcome.png"
  }
 }
 ```
 
-Or, to be more performant, you can pre-upload it to Facebook and then use it as an attachment id:
+The `url` is what you get by uploading the file in the dashboard's **Media** tab
+and clicking to copy it — see [Media Library]({{< ref "fly/reference/media.md" >}}).
+The same URL works on WhatsApp, Messenger and Instagram; there is nothing
+per-platform to configure.
+
+`keepMoving: true` sends the attachment and moves straight on to the next
+question without waiting for a reply. Leave it out if you want the respondent to
+answer something before the survey continues.
+
+### The four types
+
+| `type` | Formats | Maximum size |
+|---|---|---|
+| `image` | JPEG, PNG | 5 MB |
+| `video` | MP4, 3GPP | 16 MB |
+| `audio` | AAC, M4A, MP3, AMR, OGG | 16 MB |
+| `file` | PDF, DOCX, XLSX, PPTX | 100 MB |
+
+Note that documents use `"type": "file"`, not `"document"`:
 
 ```json
+{"type": "attachment",
+ "keepMoving": true,
+ "attachment": {
+    "type": "file",
+    "url": "https://media.vlab.digital/a/1f2e3d4c-5b6a-4978-8695-a4b3c2d1e0f9/consent-form.pdf"
+ }
+}
+```
 
+On WhatsApp, the **filename in the URL is what the respondent sees** when the
+document arrives — so name the file properly before you upload it.
+
+GIF and WebP images are not supported: convert them to PNG, JPEG, or MP4.
+
+### Captions
+
+On **WhatsApp**, the Typeform question title is sent as the caption, so it
+appears with the image, video or document. On **Messenger and Instagram** the
+platform supports no caption and the title is not shown — if the text matters
+there, send it as a separate Statement.
+
+### Using your own URL
+
+Any public HTTPS URL works in place of a Media library one:
+
+```json
 {"type": "attachment",
  "keepMoving": true,
  "attachment": {
     "type": "image",
-    "attachment_id": "3656576331230635"
+    "url": "https://example.org/my-image.png"
  }
 }
 ```
 
-## Video
+It has to stay publicly reachable for the life of the survey, and it has to
+respect the formats and limits above — neither of which we can check for you
+until the moment we send. Uploading to the Media library avoids both problems
+and sends faster.
 
-JSON:
+{{< hint type="warning" >}}
+**`attachment_id` is deprecated.** Older surveys pre-uploaded a file to a
+Facebook page and referenced it by id:
+
 ```json
-{"type": "attachment",
- "keepMoving": true,
- "attachment": {
-    "type": "video",
-    "url": "https://url-to-your-video.mp4"
- }
-}
+{"attachment": {"type": "image", "attachment_id": "3656576331230635"}}
 ```
 
+That still works on Messenger for surveys that already use it, but it does
+**nothing on WhatsApp** — that message will fail to send on any WhatsApp number.
+It is also no longer any faster: files in the Media library are pre-uploaded to
+your connected accounts automatically. Use a Media library URL instead.
+{{< /hint >}}
 
-## Upload
+## Upload (receiving files from respondents)
 
-The "Upload" type allows users to send attachments, such as images or files. Use the attachment type ("image" for pictures) to specify what kind of file you would like the user to provide. The response in the exported dataset will equal a facebook URL to the file for download.
+{{< hint type="warning" >}}
+**Not currently supported — do not use this question type.**
 
-JSON:
-```json
-{"type": "upload",
- "upload": {
-    "type": "image"
- }
-}
-```
+Fly can record that a respondent sent a photo or file, but it does not store the
+file itself. What lands in your exported data is a reference that expires at
+WhatsApp (7 days) or Messenger (about 30 days), after which it resolves to
+nothing and the file is unrecoverable.
+
+If collecting files from respondents matters for your study, talk to us before
+designing around it.
+{{< /hint >}}
 
 ## Links
 
