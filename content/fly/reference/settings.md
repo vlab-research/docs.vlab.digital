@@ -12,7 +12,7 @@ Other settings, however, can be adjusted at the Form level. These settings will 
 
 ## Timeouts
 
-See [Question Types]({{< ref questions.md >}}#variable-timeout) for more details on how to use a Variable Timeout.
+See [Timeouts]({{< ref timeouts.md >}}#variable-timeout) for more details on how to use a Variable Timeout.
 
 ## End Time
 

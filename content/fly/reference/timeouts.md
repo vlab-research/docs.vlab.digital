@@ -48,7 +48,8 @@ JSON:
 }
 ```
 
-Where `value` written as "1 minute" or "2 hours" or "2 days".
+Where `timeout` is written as a **whole number and a unit**: `"1 minute"`,
+`"3 hours"`, `"2 days"`, `"1 week"`.
 
 
 

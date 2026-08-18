@@ -3,28 +3,201 @@ title: Question Types
 weight: 4
 ---
 
-Fly supports the following question types. Note that for some types, you must add JSON to the "description" in Typeform. This JSON tells the Fly chatbot how to treat the question, sometimes overriding part or everything in Typeform itself for that question.
+Every question in a Fly survey is written in Typeform. Simple questions are just
+Typeform question types — you pick "Short Text" and you are done. Everything
+richer (a video, a tracked link, a wait, a payment) is configured by putting a
+small block of JSON in the Typeform question's **Description** box.
+
+This page lists every question type Fly supports, with a complete example of
+each. Copy the examples as they are written here.
 
 {{< toc >}}
 
+## Where you write question settings
 
+**In the Typeform question's Description box.** There is nowhere else. The Fly
+dashboard does not have a question editor — its "create survey" flow just picks
+one of your existing Typeform forms, gives it a shortcode, and imports it. To
+change a question you edit it in Typeform and re-import the form.
 
-## Short Text
+Open the question in the Typeform editor, find the **Description** field
+underneath the question title, and paste the JSON in:
 
-This is a free text question. The user can type anything and send it in the chat and it will be accepted as valid.
+```json
+{"type": "webview", "url": "https://www.who.int/hpv", "buttonText": "Read more"}
+```
 
-In Typeform, pick "Short Text"
+Three things about that box are not obvious, and they cause most of the problems
+researchers run into.
+
+### The `type` key replaces the Typeform question type
+
+If the JSON in the Description box has a `"type"`, that is the question type Fly
+uses, and Typeform's own question type is ignored. A Typeform **Statement**
+whose description says `{"type": "moviehouse", "videoId": "164118668"}` is a
+video question, not a statement.
+
+This means Typeform's question type only decides how the question looks *in the
+Typeform editor*. When a type below says "In Typeform, pick Statement", that is
+a convention for keeping your form readable — the `"type"` in the description is
+what actually decides the behaviour.
+
+Settings that do **not** change the question type — `validate`, `keepMoving`,
+`wait`, `responseMessage` — are written without a `"type"` key, and the Typeform
+question type is kept.
+
+### It has to be valid JSON, or it is ignored in silence
+
+If the Description box does not parse, Fly does not warn you and does not fail.
+It keeps the question as its plain Typeform type and throws your whole
+configuration away. A video question quietly becomes a statement.
+
+Before saving, check that every string is in double quotes, every key/value pair
+is separated by a comma, and the braces balance. If a question is behaving as if
+its description were not there, a JSON error is the first thing to suspect.
+
+### Typeform turns pasted URLs into links
+
+When you paste `https://www.who.int/hpv` into a Typeform description, Typeform
+may rewrite it as `[www.who.int/hpv](https://www.who.int/hpv)`. Fly unwraps that
+back to the plain URL for you, so a pasted link is safe — **as long as it is
+inside double quotes**, which it always is when you write JSON. This is the main
+reason to write JSON here rather than anything looser.
+
+### Referring to other answers
+
+Question titles and descriptions can both refer to values you already have:
+
+- `{{hidden:id}}` — a hidden field
+- `{{field:some_ref}}` — the answer to an earlier question
+
+These are substituted before the description is read, so you can build values
+out of them. Inside a URL they are escaped for you, so an answer containing a
+space or an `&` will not break the link. See
+[Hidden Fields]({{< ref "fly/reference/hidden.md" >}}) for the full list of what
+you can refer to and the transforms you can apply.
+
+## Every question type at a glance
+
+| What you want | In Typeform, pick | In the Description box |
+|---|---|---|
+| A free text answer | Short Text / Long Text | nothing |
+| A number | Number | nothing, or `validate` |
+| An email address | Email | nothing |
+| A phone number | Phone Number | nothing |
+| A date | Date | nothing |
+| A list of choices | Multiple Choice | nothing |
+| Up to 3 persistent buttons | Multiple Choice | `{"type": "button_choice"}` |
+| A picture or dropdown list | Picture Choice / Dropdown | nothing |
+| Yes or No | Yes/No | nothing |
+| Accept or decline | Legal | nothing |
+| A 1–5 or 1–10 scale | Opinion Scale / Rating | nothing |
+| A message with no question | Statement | nothing |
+| An opening message | Welcome Screen | nothing |
+| To end the survey | Ending / Thank You Screen | nothing |
+| To send an image, video, audio or document | Statement | `{"type": "attachment", ...}` |
+| A link whose clicks you record | Statement | `{"type": "link_tracking", ...}` |
+| A video whose watching you record | Statement | `{"type": "moviehouse", ...}` |
+| A plain link to someone else's page | Statement | `{"type": "webview", ...}` |
+| To pause the survey | Statement | `{"type": "wait", ...}` |
+| To ask permission to message later | Statement | `{"type": "notify"}` |
+| To message after 24 hours | Statement or Multiple Choice | `{"type": "utility_message", ...}` |
+| To move to another form | Statement | `{"type": "stitch", ...}` |
+| To send money | Statement | `{"type": "wait", "payment": {...}}` |
+| To hand the chat to another app | Statement | `{"type": "handoff", ...}` |
+
+## Short Text and Long Text
+
+A free text answer. Whatever the respondent types is accepted.
+
+In Typeform, pick **Short Text** or **Long Text**. Nothing goes in the
+description. The two behave identically in a chat — the difference only exists
+in Typeform.
+
+## Number
+
+Accepts a number and nothing else. If the respondent types anything that is not
+a number, they are asked the question again.
+
+In Typeform, pick **Number**. Nothing needs to go in the description.
+
+Numbers written in non-Latin numerals — Arabic-Indic (`٤٢`), Devanagari (`४२`),
+Bengali, Thai and others — are understood and recorded as ordinary digits, so
+you do not need to ask respondents to switch keyboards.
+
+To restrict what counts as a valid answer, add a `validate` block. Note there is
+no `"type"` key here: you are adding a rule to a Number question, not changing
+what kind of question it is.
+
+```json
+{"validate": {"min": 18, "max": 120, "integer": true}}
+```
+
+| Setting | Effect |
+|---|---|
+| `min` | Answers below this are rejected. |
+| `max` | Answers above this are rejected. |
+| `integer` | `true` rejects anything with a decimal part. |
+| `locale` | How to read grouping and decimal marks — `"en-US"` (default) reads `1,234.5`; `"de-DE"` reads `1.234,5`. |
+
+The message a respondent gets when their answer is rejected is set for the whole
+survey, not per question — see [Messages]({{< ref "fly/reference/messages.md" >}}).
+
+## Email
+
+Accepts a valid email address and nothing else.
+
+In Typeform, pick **Email**. Nothing goes in the description.
+
+## Phone Number
+
+Accepts a real, dialable phone number.
+
+In Typeform, pick **Phone Number**. Nothing goes in the description.
+
+**The number must carry its country code.** `+2348012345678` is accepted;
+`08012345678` is not, because Fly has no way to know which country it belongs
+to. Say so in the question text — "Please include your country code, e.g.
++234…" — or you will lose answers.
+
+When you pass a phone answer to a payment provider, use the `|e164` transform
+(`{{field:phone|e164}}`) so trailing text the respondent typed does not travel
+with the number. See [Hidden Fields]({{< ref "fly/reference/hidden.md" >}}).
+
+## Date
+
+Sends the question and accepts the respondent's reply as text.
+
+In Typeform, pick **Date**. Nothing goes in the description.
+
+**Fly does not check the format.** Whatever the respondent types is accepted and
+recorded exactly as typed, so ask for the format you want in the question text
+("Please write the date as DD/MM/YYYY") and expect to clean the answers
+afterwards. If you need a checked answer, ask for day, month and year as three
+Number questions instead.
 
 ## Multiple Choice
 
-Creates a multiple choice question.
+A list of choices the respondent picks from by tapping.
 
-In Typeform, pick "Multiple Choice".
+In Typeform, pick **Multiple Choice**. Nothing goes in the description. The
+answer recorded is the choice's **label** — the text the respondent saw.
 
-Notes:
+**How many choices you can have depends on the platform:**
 
-1. You can have a maximum of 13 answers.
-2. If any answer text is longer than 15 characters, you should use letters A,B,C...M as the answers instead and the question text should be written in the following format:
+| Platform | Number of choices | How it looks |
+|---|---|---|
+| WhatsApp | 1–3 | Buttons under the message |
+| WhatsApp | 4–10 | A tappable list |
+| WhatsApp | more than 10 | **The message fails to send** |
+| Messenger | up to 13 | Quick replies above the keyboard |
+
+If your survey runs on WhatsApp, keep every Multiple Choice question to **10
+choices or fewer**.
+
+**If any choice is longer than about 15 characters**, tapping becomes unreliable
+and the labels get cut off. Use letters as the choices and put the real text in
+the question:
 
 ```
 Which region do you live in?
@@ -36,59 +209,106 @@ Which region do you live in?
 -F. South West
 ```
 
-The `-` and the `.` before and after the letters are optional, but recommended for legibility.
+and then make the Typeform choices `A`, `B`, `C`, `D`, `E`, `F`. The `-` and the
+`.` around the letters are optional but make the message easier to read.
 
 ## Button Choice
 
-Button Choice is similar to Multiple Choice, but displays options as persistent buttons instead of quick replies. Quick replies disappear after the user taps one, while button template buttons remain visible in the chat.
+The same as Multiple Choice, but on Messenger the options are sent as buttons
+that stay in the conversation instead of quick replies that vanish as soon as
+one is tapped.
 
-In Typeform, pick "Multiple Choice", then add the following to the description:
-
-```json
-{"type": "button_choice"}
-```
-
-**Limitations:**
-
-1. Maximum of **3 buttons** (Facebook API limit). Use Multiple Choice for more options.
-2. Button titles are truncated at 20 characters by Facebook.
-3. Template text is limited to 640 characters.
-
-**When to use Button Choice:**
-
-- For questions with 3 or fewer options where you want buttons to persist visually
-- Yes/No/Maybe style questions with a button appearance
-- When you want the visual distinction of button templates over quick replies
-
-**Example Setup:**
-
-Create a Multiple Choice question in Typeform with your options (up to 3), then add to the description:
+In Typeform, pick **Multiple Choice**, and put this in the description:
 
 ```json
 {"type": "button_choice"}
 ```
 
-The bot will display a button template with postback buttons instead of quick replies.
+Limits:
 
-## Number
+1. **Three buttons maximum** — this is a Facebook limit. With more than three
+   options, use Multiple Choice.
+2. Button labels are cut off at 20 characters.
+3. The message text is limited to 640 characters.
 
-Number type validates that the user has sent us a number and only a number. To change the error message when a user enters something other than a number, do: ....
+On WhatsApp a Button Choice question is identical to a Multiple Choice question
+with three options, since WhatsApp already sends three-option questions as
+buttons.
 
-In Typeform, pick "Number".
+## Dropdown and Picture Choice
 
+Both behave exactly like Multiple Choice in a chat: the choice labels are sent
+as tappable options and the label is recorded as the answer. **Pictures are not
+sent** — only the labels — so use Picture Choice only if you are also using the
+same form outside Fly.
+
+In Typeform, pick **Dropdown** or **Picture Choice**. Nothing goes in the
+description. The platform limits under Multiple Choice apply.
+
+## Yes/No
+
+A two-option question. The answer recorded is `Yes` or `No`.
+
+In Typeform, pick **Yes/No**. Nothing goes in the description.
+
+## Legal
+
+A two-option question for consent. The answer recorded is `I Accept` or
+`I don't Accept`.
+
+In Typeform, pick **Legal**. Nothing goes in the description. Branch on the
+answer with a Typeform logic jump in the usual way.
+
+## Opinion Scale and Rating
+
+A numbered scale sent as tappable options.
+
+In Typeform, pick **Opinion Scale** or **Rating**, and set the number of steps
+there. Nothing goes in the description.
+
+The options are the numbers themselves: a 5-step scale sends `1 2 3 4 5`. If you
+turn Typeform's "start at 1" setting off, it sends `0 1 2 3 4` instead. The
+answer recorded is the number the respondent tapped.
+
+**On WhatsApp, a scale can have at most 10 steps.** An 11-point scale (0–10) is
+11 options, which is over WhatsApp's limit and will fail to send. Use 0–9 or
+1–10.
 
 ## Statement
 
-A statement is a simple message that you send. The bot will move on to the next question without waiting for a response.
+A message that is sent without asking anything. The survey moves straight on to
+the next question.
 
-In Typeform, pick "Statement"
+In Typeform, pick **Statement**. Nothing goes in the description.
+
+If you want a statement to pause the survey rather than continue, that is a
+[Wait](#wait), which is a different question type — a `wait` added to a plain
+Statement is ignored.
+
+## Welcome Screen
+
+The first message of the form. It is sent as a question with a single button,
+labelled with whatever button text you set in Typeform (`Continue` if you set
+none). The respondent taps it to begin.
+
+In Typeform, add a **Welcome Screen**. Nothing goes in the description.
+
+## Ending (Thank You Screen)
+
+The last message. It is sent, and then the respondent's survey is marked
+complete.
+
+In Typeform, add an **Ending** / Thank You Screen. Nothing goes in the
+description.
+
+Only the **first line** of the ending's text is sent — Typeform adds its own
+boilerplate below it, and that is dropped. Keep the whole message on one line.
 
 ## Attachments: Image, Video, Audio, Document
 
 An attachment question sends a file to the respondent. All four kinds share one
 shape — only `attachment.type` changes:
 
-JSON:
 ```json
 {"type": "attachment",
  "keepMoving": true,
@@ -98,6 +318,8 @@ JSON:
  }
 }
 ```
+
+In Typeform, pick **Statement**.
 
 The `url` is what you get by uploading the file in the dashboard's **Media** tab
 and clicking to copy it — see [Media Library]({{< ref "fly/reference/media.md" >}}).
@@ -188,11 +410,196 @@ If collecting files from respondents matters for your study, talk to us before
 designing around it.
 {{< /hint >}}
 
-## Links
+## Tracked links
 
-It's possible to send a link as a button and allow the users to open it in a Messenger webview:
+Sends a link as a button and records who clicked it and when. You write the
+destination; Fly builds the rest of the link.
 
-JSON:
+In Typeform, pick **Statement**, and put this in the description:
+
+```json
+{
+  "type": "link_tracking",
+  "url": "https://www.who.int/hpv",
+  "buttonText": "Read about HPV",
+  "keepMoving": true
+}
+```
+
+That is the whole question.
+
+{{< hint type="note" >}}
+**`link_tracking` is new as of 18 August 2026.** Surveys written before this
+date send links a different way — see [Plain links](#plain-links) — and they
+keep working exactly as they do now.
+{{< /hint >}}
+
+{{< hint type="warning" >}}
+**Do not put an account id, page id, phone number id or user id anywhere in a
+tracked link.** There is nowhere for one to go, and nothing to copy from another
+survey. Fly already knows which participant it is talking to and on which
+account, and it puts that into the link itself. Anything of that kind that you
+add by hand is ignored at best, and at worst attaches the click to the wrong
+conversation.
+{{< /hint >}}
+
+| Setting | Required | What it does |
+|---|---|---|
+| `url` | Yes | Where the button sends the respondent. Write the full address, in quotes. |
+| `buttonText` | No | The label on the button. Keep it under 20 characters — longer labels are cut off. Defaults to `View website`. |
+| `keepMoving` | No | `true` sends the message and continues to the next question immediately. |
+| `wait` | No | Hold the survey until the respondent clicks. See [below](#waiting-for-a-click-or-a-play). |
+| `responseMessage` | No | What to reply with if the respondent types something instead of tapping the button. |
+
+The question title is the message text; `buttonText` is the button under it.
+
+### Phone, email and SMS buttons
+
+`tel:`, `mailto:` and `sms:` destinations work the same way and are recorded the
+same way. Write the whole thing in the `url`:
+
+```json
+{
+  "type": "link_tracking",
+  "url": "tel:+2340700220112",
+  "buttonText": "Call the helpline",
+  "keepMoving": true
+}
+```
+
+```json
+{
+  "type": "link_tracking",
+  "url": "mailto:support@example.org",
+  "buttonText": "Email us",
+  "keepMoving": true
+}
+```
+
+Whether the respondent's phone actually opens a dialler or a mail app is up to
+their phone. The click is recorded either way.
+
+## Videos
+
+Plays a video and records what the respondent does with it — every play, pause,
+seek and finish, plus a signal every 30 seconds while it is playing. You write
+the video id; Fly builds the rest.
+
+In Typeform, pick **Statement**, and put this in the description:
+
+```json
+{
+  "type": "moviehouse",
+  "videoId": "164118668",
+  "buttonText": "Watch the video",
+  "keepMoving": true
+}
+```
+
+{{< hint type="note" >}}
+**`moviehouse` is new as of 18 August 2026.** Surveys written before this date
+send videos a different way — see [Plain links](#plain-links) — and they keep
+working exactly as they do now.
+{{< /hint >}}
+
+{{< hint type="warning" >}}
+**Do not put an account id, page id, phone number id or user id anywhere in a
+video question.** There is nowhere for one to go, and nothing to copy from
+another survey. Fly knows which participant is watching and on which account.
+A hand-written id is how video events end up attached to the wrong conversation
+— sometimes to a conversation that does not exist, in which case that
+respondent's survey stops dead and never recovers.
+{{< /hint >}}
+
+The `videoId` is the number in the Vimeo address: `https://vimeo.com/164118668`
+is `164118668`. **Keep it in quotes**, as above.
+
+| Setting | Required | What it does |
+|---|---|---|
+| `videoId` | Yes | The Vimeo video id, in quotes. |
+| `buttonText` | No | The label on the button. Under 20 characters. Defaults to `View website`. |
+| `keepMoving` | No | `true` sends the message and continues to the next question immediately. |
+| `wait` | No | Hold the survey until the respondent plays the video. See [below](#waiting-for-a-click-or-a-play). |
+| `responseMessage` | No | What to reply with if the respondent types something instead of tapping the button. |
+
+You do not choose which video player to use, and you do not need to know whether
+the survey is running on WhatsApp or Messenger. Fly handles both.
+
+### What a video records
+
+| Event | Happens when |
+|---|---|
+| `moviehouse:play` | The respondent starts, or resumes, the video |
+| `moviehouse:pause` | They pause it |
+| `moviehouse:ended` | The video reaches the end |
+| `moviehouse:seeked` | They jump to another point |
+| `moviehouse:heartbeat` | Every 30 seconds while the video is playing |
+| `moviehouse:volumechange` | They change the volume |
+| `moviehouse:playbackratechange` | They change the speed |
+| `moviehouse:error` | The video fails to load or play |
+
+All of these are recorded whether or not you wait on any of them, so you can
+analyse watching behaviour afterwards without changing the question.
+
+## Waiting for a click or a play
+
+A tracked link or a video can hold the survey until the respondent actually
+clicks or actually plays. Replace `keepMoving` with a `wait`:
+
+```json
+{
+  "type": "moviehouse",
+  "videoId": "164118668",
+  "buttonText": "Watch the video",
+  "responseMessage": "Please watch the video before continuing.",
+  "wait": {
+    "type": "external",
+    "value": {"type": "moviehouse:play"}
+  }
+}
+```
+
+and for a link:
+
+```json
+{
+  "type": "link_tracking",
+  "url": "https://www.who.int/hpv",
+  "buttonText": "Read about HPV",
+  "responseMessage": "Please open the link before continuing.",
+  "wait": {
+    "type": "external",
+    "value": {"type": "linksniffer:click"}
+  }
+}
+```
+
+Leave the `value` as short as it is written above. `{"type": "linksniffer:click"}`
+matches the click on this question's own button, and `{"type": "moviehouse:play"}`
+matches a play of this question's own video. There is nothing else to fill in.
+
+{{< hint type="warning" >}}
+**A respondent who never clicks never continues.** A `wait` holds the survey on
+this question until the click or the play happens: if the respondent closes the
+message, ignores it, or their phone refuses to open the link, they stop here.
+
+So use a `wait` only where the click really is required, and plan for the people
+who never do it — a [Bail]({{< ref "fly/reference/bails.md" >}}) picks up
+everyone who has been sitting on the same question too long and moves them
+somewhere else. Otherwise use `keepMoving: true` and use the recorded clicks and
+plays to analyse who engaged.
+{{< /hint >}}
+
+**Set `keepMoving` or `wait`, never both.** They ask for opposite things — one
+continues immediately, the other holds the survey until the respondent acts — so
+every question uses one or the other.
+
+## Plain links
+
+For a link to a page that is not ours, and whose clicks you do not need
+recorded, use `webview`. It sends exactly the address you write, with nothing
+added:
+
 ```json
 {
   "type": "webview",
@@ -203,489 +610,176 @@ JSON:
 }
 ```
 
-If you want to go further, Fly offers the ability to track link clicking. That can be done with the following snippet:
+In Typeform, pick **Statement**.
 
-JSON:
+`keepMoving`, `responseMessage` and `buttonText` mean the same as they do above.
+There is no click to wait on, because nothing is recorded — if you want to know
+who clicked, use a [tracked link](#tracked-links) instead.
+
+Set `extensions` to `true` only if the page you are linking to uses Messenger
+Extensions **and** its domain is whitelisted in your Facebook app. If it is not
+whitelisted, the button will not open. For most links, `false` is correct.
+
+{{< hint type="warning" >}}
+**A `webview` is never tracked, even if it points at one of our own addresses.**
+If you write a `webview` whose address happens to be a Fly link or video service,
+Fly sends it exactly as you typed it: it does not attach the respondent, does not
+know which account the conversation is on, and does not correct an address that
+has stopped working. Use [`link_tracking`](#tracked-links) or
+[`moviehouse`](#videos) to get any of that.
+{{< /hint >}}
+
+## Wait
+
+Pauses the survey and picks it up later. This is how multi-wave surveys are
+built.
+
+In Typeform, pick **Statement**, and put this in the description:
+
 ```json
 {
-  "type": "webview",
-  "url": {
-    "base": "links.vlab.digital",
-    "params": {
-      "url": "asiapacific.unwomen.org/en/countries/india",
-      "id": "{{hidden:id}}",
-      "pageid": "YOUR_PAGE_ID"
-    }
-  },
-  "buttonText": "Visit UN Women",
-  "extensions": false,
-  "keepMoving": true
-}
-```
-
-To track specific information about the user, add metadata as query parameters in addition to `url` in the `url` value. For example, you can add the user id by adding `id` with a typeform ref to a "hidden field" called "id" (note, you will probably need to type out the "@id" part inside Typeform so it links it to a hidden field properly):
-
-```json
-{
-  "type": "webview",
-  "url": {
-    "base": "links.vlab.digital",
-    "params": {
-      "url": "asiapacific.unwomen.org/en/countries/india",
-      "id": "{{hidden:id}}",
-      "pageid": "YOUR_PAGE_ID"
-    }
-  },
-  "buttonText": "Visit UN Women",
-  "extensions": false,
-  "keepMoving": true
-}
-```
-
-Set `keepMoving` to `true` if you want the message to act like a "statement" and continue to the next message. Otherwise, you can combine with a "wait" to wait until the user has clicked the link:
-
-JSON:
-```json
-{
-  "type": "webview",
-  "url": {
-    "base": "links.vlab.digital",
-    "params": {
-      "url": "asiapacific.unwomen.org/en/countries/india",
-      "id": "{{hidden:id}}",
-      "pageid": "YOUR_PAGE_ID"
-    }
-  },
-  "buttonText": "Visit UN Women",
-  "responseMessage": "Click on the button to visit the website",
-  "extensions": false,
-  "wait": {
-    "type": "external",
-    "value": {
-      "type": "linksniffer:click",
-      "url": "https://asiapacific.unwomen.org"
-    }
-  }
-}
-```
-
-You can set `extensions` to `true` if the page you are visiting is using Messenger Extensions (i.e. Fly Survey's "Moviehouse" which can be used to watch Vimeo videos and track video-watching events:
-
-Moviehouse example, which waits until they either start watching the video OR one hour is passed:
-
-```json
-  {
-    "type": "webview",
-    "url": {
-        "base": "virtuallab-videos.netlify.app",
-        "params": {
-            "id": "YOUR_VIMEO_ID",
-            "pageId": "YOUR_FACEBOOK_PAGE_ID",
-            "userId": "{{hidden:id}}"
-        }
-    },
-    "buttonText": "Watch now!",
-    "responseMessage": "Sorry, you need to watch the video before continuing",
-    "extensions": true,
+    "type": "wait",
+    "responseMessage": "Please wait!",
     "wait": {
-      "op": "or",
-      "vars": [
-        {
-          "type": "timeout",
-          "value": "1 hour"
-        },
-        {
-          "type": "external",
-          "value": {
-            "type": "moviehouse:play",
-            "id": "YOUR_VIMEO_ID"
-          }
-        }
-      ]
-    }
-  }
-
-```
-
-### Using Special URI Schemes (tel, mailto, sms)
-
-In addition to HTTP and HTTPS links, linksniffer supports special URI schemes like `tel:`, `mailto:`, `sms:`, and others. This allows you to create buttons that trigger phone calls, compose emails, or send SMS messages directly from your chatbot.
-
-The linksniffer service accepts an optional `p` (protocol) parameter to specify which URI scheme to use:
-
-- **`https`** (default) - Standard web links
-- **`http`** - Non-secure web links
-- **`tel`** - Phone number links (triggers phone dialer)
-- **`mailto`** - Email links (opens email client)
-- **`sms`** - SMS links (opens messaging app)
-- **Other single-colon schemes** - Any valid URI scheme (e.g., `whatsapp:`)
-
-**Protocol formatting:**
-- HTTP and HTTPS use `://` separator: `https://example.com`
-- All other schemes use `:` separator: `tel:+1234567890`, `mailto:user@example.com`
-
-#### Example: Phone Number Link
-
-To create a button that opens the phone dialer:
-
-```json
-{
-  "type": "webview",
-  "url": {
-    "base": "links.vlab.digital",
-    "params": {
-      "url": "+1-555-123-4567",
-      "p": "tel",
-      "id": "{{hidden:id}}",
-      "pageid": "YOUR_PAGE_ID"
-    }
-  },
-  "buttonText": "Call Support",
-  "extensions": false,
-  "keepMoving": true
-}
-```
-
-This will generate a link like `tel:+1-555-123-4567` that opens the device's phone dialer when clicked. The click is still tracked with the user's `id` and `pageid` for analytics.
-
-#### Example: Email Link
-
-To create a button that opens the email client:
-
-```json
-{
-  "type": "webview",
-  "url": {
-    "base": "links.vlab.digital",
-    "params": {
-      "url": "support@example.com",
-      "p": "mailto",
-      "id": "{{hidden:id}}",
-      "pageid": "YOUR_PAGE_ID"
-    }
-  },
-  "buttonText": "Email Us",
-  "extensions": false,
-  "keepMoving": true
-}
-```
-
-This generates `mailto:support@example.com` and tracks when users click the email button.
-
-#### Example: SMS Link
-
-To create a button that opens the messaging app:
-
-```json
-{
-  "type": "webview",
-  "url": {
-    "base": "links.vlab.digital",
-    "params": {
-      "url": "+1-555-123-4567",
-      "p": "sms",
-      "id": "{{hidden:id}}",
-      "pageid": "YOUR_PAGE_ID"
-    }
-  },
-  "buttonText": "Text Us",
-  "extensions": false,
-  "keepMoving": true
-}
-```
-
-#### Waiting for Special Link Clicks
-
-You can use wait conditions with special URI schemes just like regular links:
-
-```json
-{
-  "type": "webview",
-  "url": {
-    "base": "links.vlab.digital",
-    "params": {
-      "url": "+1-555-123-4567",
-      "p": "tel",
-      "id": "{{hidden:id}}",
-      "pageid": "YOUR_PAGE_ID"
-    }
-  },
-  "buttonText": "Call Support",
-  "responseMessage": "Please call us to continue",
-  "extensions": false,
-  "wait": {
-    "type": "external",
-    "value": {
-      "type": "linksniffer:click"
-    }
-  }
-}
-```
-
-**Note:** All link clicks through linksniffer are tracked and generate events, regardless of the protocol used. This allows you to track when users initiate phone calls, compose emails, or perform other actions triggered by special URI schemes.
-
-## Stitch
-
-When stitching from one form to another, the "stitch" must be a statement:
-
-
-JSON:
-```json
-{"type": "stitch",
- "stitch": { "form": "FORM_SHORTCODE" }}
-```
-
-Where `FORM_SHORTCODE` is the shortcode of the form you'd like to move to.
-
-You can also include metadata:
-
-JSON:
-```json
-{"type": "stitch",
- "stitch": { "form": "FORM_SHORTCODE", metadata: {"variable_name": "variable_answer" }}}
-```
-
-## Wait - Timeout
-
-Timeouts allow you to pause your survey and continue it later, creating multi-wave surveys. See more under [Timeouts]({{< ref "fly/reference/timeouts.md">}}).
-
-
-# Wait - External Events
-
-You can wait on external events. For example, linksniffer events allow you to wait until someone clicks a link. Or MovieHouse events allow you to wait until someone has started (or finished) a video.
-
-## Basic Wait Examples
-
-For example, this JSON would wait for a moviehouse:play event with the video id 23456:
-
-```json
-{ "type": "wait",
- "wait": {
- "type": "external",
- "value": {
-    "type": "moviehouse:play",
-    "id": "23456"
-  }}
-}
-```
-
-If you want to wait for any moviehouse:play event, regardless of video id, you can simply omit part of the json from the "value" property:
-
-```json
-{ "type": "wait",
- "wait": {
- "type": "external",
- "value": {
-    "type": "moviehouse:play"
-  }}
-}
-```
-
-## Complex Wait Logic with Operators
-
-For more complex scenarios, you can use logical operators (`op`) and variables (`vars`) to create compound wait conditions. This allows you to wait for multiple events or create sophisticated logic.
-
-### Available Operators
-
-- **`and`**: All conditions must be fulfilled
-- **`or`**: At least one condition must be fulfilled
-
-### Basic AND Logic
-
-Wait for both a link click AND a video play event:
-
-```json
-{
-  "type": "wait",
-  "wait": {
-    "type": "external",
-    "op": "and",
-    "vars": [
-      {
-        "type": "external",
-        "value": {
-          "type": "linksniffer:click",
-          "url": "https://example.com"
-        }
-      },
-      {
-        "type": "external",
-        "value": {
-          "type": "moviehouse:play",
-          "id": "12345"
-        }
-      }
-    ]
-  }
-}
-```
-
-### Basic OR Logic
-
-Wait for either a link click OR a video play event:
-
-```json
-{
-  "type": "wait",
-  "wait": {
-    "type": "external",
-    "op": "or",
-    "vars": [
-      {
-        "type": "external",
-        "value": {
-          "type": "linksniffer:click",
-          "url": "https://example.com"
-        }
-      },
-      {
-        "type": "external",
-        "value": {
-          "type": "moviehouse:play",
-          "id": "12345"
-        }
-      }
-    ]
-  }
-}
-```
-
-### Nested Logic
-
-You can create more complex nested conditions. For example, wait for (link click AND video start) OR (link click AND video finish):
-
-```json
-{
-  "type": "wait",
-  "wait": {
-    "type": "external",
-    "op": "or",
-    "vars": [
-      {
-        "type": "external",
-        "op": "and",
-        "vars": [
-          {
-            "type": "external",
-            "value": {
-              "type": "linksniffer:click",
-              "url": "https://example.com"
-            }
-          },
-          {
-            "type": "external",
-            "value": {
-              "type": "moviehouse:play",
-              "id": "12345"
-            }
-          }
-        ]
-      },
-      {
-        "type": "external",
-        "op": "and",
-        "vars": [
-          {
-            "type": "external",
-            "value": {
-              "type": "linksniffer:click",
-              "url": "https://example.com"
-            }
-          },
-          {
-            "type": "external",
-            "value": {
-              "type": "moviehouse:finish",
-              "id": "12345"
-            }
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### Mixed Event Types
-
-You can combine different types of events in the same logical expression:
-
-```json
-{
-  "type": "wait",
-  "wait": {
-    "type": "external",
-    "op": "and",
-    "vars": [
-      {
-        "type": "external",
-        "value": {
-          "type": "linksniffer:click",
-          "url": "https://example.com"
-        }
-      },
-      {
         "type": "timeout",
-        "value": "5m"
-      }
-    ]
-  }
+        "value": {
+            "type": "relative",
+            "timeout": "2 days"
+        }
+    }
 }
 ```
 
-This example waits for both a link click AND a 5-minute timeout to occur.
+The question title is sent as a message, then the survey stops until the timeout
+fires. `responseMessage` is what a respondent gets if they write in while
+waiting.
 
-## Structure Reference
+Write a relative timeout as **a whole number and a unit**: `"1 minute"`,
+`"3 hours"`, `"2 days"`, `"1 week"`.
 
-When using operators, the wait object should have this structure:
+For absolute timeouts, timeouts you can change from the dashboard after the
+survey is live, and everything to do with waits longer than 24 hours, see
+[Timeouts]({{< ref "fly/reference/timeouts.md" >}}).
+
+## Waiting for an external event
+
+Besides timeouts, a wait can be held until something happens outside the chat: a
+link click, a video play, a payment result.
 
 ```json
 {
   "type": "wait",
   "wait": {
     "type": "external",
-    "op": "and|or",
-    "vars": [
-      // Array of wait conditions (can be simple or complex)
-    ]
+    "value": {"type": "moviehouse:play"}
   }
 }
 ```
 
-Each item in the `vars` array can be:
-- A simple wait condition (with `type` and `value`)
-- Another complex condition (with `op` and `vars` for nesting)
+The `value` describes which event you are waiting for. Every key you put in it
+has to match the event exactly, so **write as little as you can get away with**.
+`{"type": "moviehouse:play"}` waits for any play; adding `"id": "164118668"`
+narrows it to that one video and will match nothing if the id is off by a
+character.
 
-This allows you to create arbitrarily complex logical expressions for your wait conditions.
+For a click, `{"type": "linksniffer:click"}` on its own is what you want. If you
+do add a `"url"`, write the complete destination — `https://` and the whole path,
+exactly as it appears in the question.
 
+## Notify
+
+Sends Facebook's built-in "Notify Me" request, which gets you permission to send
+the respondent one message later. Messenger only.
+
+In Typeform, pick **Statement**, and put this in the description:
+
+```json
+{"type": "notify"}
+```
+
+Each permission is good for **one message**. Fly stores the permissions it
+collects and spends one automatically when it needs to write to somebody outside
+Messenger's 24-hour window — but only if you tell the wait to use one:
+
+```json
+{
+    "type": "wait",
+    "responseMessage": "Please wait!",
+    "wait": {
+        "type": "timeout",
+        "notifyPermission": true,
+        "value": {
+            "type": "relative",
+            "timeout": "2 days"
+        }
+    }
+}
+```
+
+Because it is only one message, the message you send has to be a **question** —
+the respondent must answer before anything else can happen. A long wait
+therefore usually looks like this:
+
+1. a `notify` question
+2. a `wait` with `notifyPermission: true`
+3. a question — "would you like to answer a few more questions?"
+4. a statement that stitches to the next form
+
+You also need the permission enabled on your Page: **Page Settings → Advanced
+Messaging → one-time notification**.
+
+For most surveys a [Utility Message](#utility-message) is now the better choice —
+it needs no permission from the respondent at all.
+
+{{< hint type="warning" >}}
+**Recurring notifications (`{"type": "notification_messages"}`) are deprecated.**
+Facebook retired them in early 2026. Surveys that already use them still send,
+but do not build new surveys around them — use a
+[Utility Message](#utility-message) instead.
+{{< /hint >}}
 
 ## Utility Message
 
-Sends a pre-approved Facebook **Utility Message template** to the user. Use this for notifications that need to reach the user after the 24-hour Messenger window has closed — survey results, prize notifications, reminders.
+Sends a pre-approved Facebook **Utility Message template**. Use this for
+anything that has to reach the respondent after the 24-hour messaging window has
+closed — survey results, prize notifications, reminders.
 
-> Utility Messages are the current replacement for the deprecated Message Tags (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications. They require no user opt-in but do require a template that Facebook has approved for your Page.
+> Utility Messages are the current replacement for the deprecated Message Tags
+> (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications. They require no
+> opt-in from the respondent, but they do require a template that Facebook has
+> approved for your Page.
 
 ### 1. Create the template in the dashboard
 
-Go to **Message Templates** in the dashboard. A template is identified by the tuple **(page, name, language)** — the same template name can exist in multiple independently-approved language variants, each created and approved separately.
+Go to **Message Templates** in the dashboard. A template is identified by the
+tuple **(page, name, language)** — the same template name can exist in several
+independently-approved language variants, each created and approved separately.
 
 | Field | Constraint |
 |-------|-----------|
 | Name | `snake_case` — lowercase letters, digits, underscores. Unique per (page, language). |
 | Language | Must be an exact Facebook-supported locale (`en_US`, `es_LA`, `ha`, …). |
 | Body | Up to **1024 characters**. Use `{{1}}`, `{{2}}`, … for positional placeholders. Numbering must start at `{{1}}` and be sequential. |
-| Buttons | Optional. Up to **3 buttons**. Each label is **≤ 20 characters** and unique within the template. Buttons are **POSTBACK** buttons — they stay visible in the chat until the user taps one. |
+| Buttons | Optional. Up to **3 buttons**. Each label is **≤ 20 characters** and unique within the template. Buttons stay visible in the chat until the respondent taps one. |
 
-If your body contains placeholders, the dashboard will prompt for a **sample value** per placeholder. Facebook reviewers see the body with these values substituted in — that's how they judge whether the content is truly utility and not promotional. Samples are **not** used at send time; real values come from `params` in your survey JSON.
+If your body contains placeholders, the dashboard will prompt for a **sample
+value** per placeholder. Facebook reviewers see the body with these values
+substituted in — that is how they judge whether the content is truly utility and
+not promotional. Samples are **not** used at send time; real values come from
+`params` in your question's description.
 
-> **Approved templates can't be edited.** To change wording or buttons, delete and recreate. Approval is usually fast (seconds), but Facebook may reject content it considers promotional.
+> **Approved templates cannot be edited.** To change wording or buttons, delete
+> and recreate. Approval is usually fast (seconds), but Facebook may reject
+> content it considers promotional.
 
 ### 2. Add the question in Typeform
 
 - **Text-only template** → use a **Statement** question.
-- **Template with buttons** → use a **Multiple Choice** question whose choices match the template's approved button labels (same labels, same order, same count). Typeform's native logic editor reads those choices to drive branching.
+- **Template with buttons** → use a **Multiple Choice** question whose choices
+  match the template's approved button labels (same labels, same order, same
+  count). Typeform's own logic editor reads those choices to drive branching.
 
-Put the utility-message metadata in the question's description as JSON (or YAML — both work):
+Put this in the question's description:
 
 ```json
 {
@@ -696,18 +790,19 @@ Put the utility-message metadata in the question's description as JSON (or YAML 
 }
 ```
 
-**Fields:**
-
 | Field | Required | Notes |
 |-------|----------|-------|
 | `type` | Yes | Always `utility_message`. |
 | `template` | Yes | The template name you created in the dashboard. |
-| `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). No silent default — missing `language` is an error. |
-| `params` | Only if the body has placeholders | Positional array of values substituted into `{{1}}`, `{{2}}`, …. Supports `{{hidden:X}}` interpolation. Length must equal the placeholder count exactly. |
+| `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). There is no default — a missing `language` is an error. |
+| `params` | Only if the body has placeholders | Positional list of values substituted into `{{1}}`, `{{2}}`, …. Supports `{{hidden:X}}` interpolation. Its length must equal the placeholder count exactly. |
 
 ### Branching on a button tap
 
-Define the Multiple Choice's choice labels to **exactly match** the approved template's button labels — same labels, same order, same count. The approved template bakes in `value == label` per button, so the value Typeform's logic editor sees on a tap is the same string as the label the user pressed:
+Make the Multiple Choice's choice labels **exactly match** the approved
+template's button labels — same labels, same order, same count. The value your
+Typeform logic sees on a tap is then the same string as the label the respondent
+pressed:
 
 ```
 [Multiple Choice question]   description: {"type": "utility_message", "template": "results_ready", ...}
@@ -718,11 +813,14 @@ Define the Multiple Choice's choice labels to **exactly match** the approved tem
      if answer equals "No"  → [thank and end]
 ```
 
-If the choice labels don't match, or the count differs from the template's button count, the send will fail — Facebook validates the parameter count against the approved button count.
+If the labels do not match, or the count differs from the template's button
+count, the send fails — Facebook validates the parameter count against the
+approved button count.
 
 ### Typical survey flow
 
-Utility messages are usually sent after a long-running Wait — that's when the 24-hour window matters:
+Utility messages are usually sent after a long wait — that is when the 24-hour
+window matters:
 
 ```
 [Consent questions]
@@ -732,27 +830,57 @@ Utility messages are usually sent after a long-running Wait — that's when the 
 [Utility Message] "Your {{1}} results are in, {{2}}!"   ← sent outside the 24h window
 ```
 
-See [Timeouts]({{< ref "fly/reference/timeouts.md">}}) for timeout setup.
+See [Timeouts]({{< ref "fly/reference/timeouts.md" >}}) for timeout setup.
 
-### Common rejection / send errors
+### Common rejection and send errors
 
 | What you see | What it usually means |
 |---|---|
 | Template stays `PENDING` indefinitely | Refresh the page; if still stuck after an hour, delete and recreate. |
-| Rejected: "promotional" / `TAG_SHOULD_BE_MARKETING` | Facebook classified the body as marketing. Rewrite to be transactional — confirmations, reminders, results — and remove calls-to-action like "Claim now!". |
+| Rejected: "promotional" / `TAG_SHOULD_BE_MARKETING` | Facebook classified the body as marketing. Rewrite it to be transactional — confirmations, reminders, results — and remove calls-to-action like "Claim now!". |
 | Rejected: `TEMPLATE_VARIABLES_MISSING_SAMPLE_VALUES` | A `{{N}}` placeholder in the body has no sample value. Provide one in the dashboard form, or remove the placeholder. |
-| Send fails with "template not found" | The `(template, language)` pair in your survey JSON doesn't match any APPROVED row. Check spelling and create the missing language variant. |
-| Send fails with "placeholder count mismatch" | The `params` array length doesn't match the number of `{{N}}` placeholders in the body. Count and align. |
-| Button-tap question has fewer/more choices than the approved template | The Multiple Choice's choices count must equal the approved button count exactly. |
+| Send fails with "template not found" | The `(template, language)` pair in your description does not match any approved row. Check the spelling and create the missing language variant. |
+| Send fails with "placeholder count mismatch" | The `params` list length does not match the number of `{{N}}` placeholders in the body. Count and align. |
+| Button-tap question has fewer or more choices than the approved template | The Multiple Choice's choice count must equal the approved button count exactly. |
+
+## Stitch
+
+Moves the respondent from this form to another one. Everything after the stitch
+happens in the new form.
+
+In Typeform, pick **Statement**, and put this in the description:
+
+```json
+{"type": "stitch",
+ "stitch": {"form": "FORM_SHORTCODE"}}
+```
+
+where `FORM_SHORTCODE` is the shortcode of the form you want to move to.
+
+The `"type"` must be `stitch`. A Statement that carries a `stitch` but no `type`
+is treated as an ordinary statement and the stitch never happens.
+
+You can also set hidden fields on the way in. They are merged into whatever the
+respondent already carries, so the new form can branch on them:
+
+```json
+{"type": "stitch",
+ "stitch": {"form": "FORM_SHORTCODE",
+            "metadata": {"arm": "treatment", "wave": "2"}}}
+```
 
 ## Payment
 
-Read about payment question types under [Incentive Payments]({{< ref "fly/reference/incentive_payments.md">}})
+Read about payment question types under
+[Incentive Payments]({{< ref "fly/reference/incentive_payments.md" >}}).
 
 ## Passing Thread Control (Handoff)
 
-To hand the conversation off to another Facebook app (a "secondary receiver" in
-Facebook's handover protocol), use `type: handoff` with a `handoff` block:
+Hands the conversation to another Facebook app (a "secondary receiver" in
+Facebook's handover protocol), and picks the survey back up when that app hands
+control back.
+
+In Typeform, pick **Statement**, and put this in the description:
 
 ```json
 {
@@ -760,47 +888,40 @@ Facebook's handover protocol), use `type: handoff` with a `handoff` block:
   "handoff": {
     "target_app_id": "123456789",
     "mode": "wait",
-    "metadata": { "check": "my_handoff" }
+    "metadata": {"check": "my_handoff"}
   }
 }
 ```
 
-**Fields:**
-
 | Field | Required | Notes |
 |-------|----------|-------|
 | `type` | Yes | Always `handoff`. |
-| `handoff.target_app_id` | Yes | The Facebook app ID of the external app to hand control to. |
-| `handoff.mode` | No | `wait` (default) — the survey waits for control to come back, then resumes. |
+| `handoff.target_app_id` | Yes | The Facebook app ID of the app to hand control to. |
+| `handoff.mode` | No | `wait` (the default and only supported value) — the survey waits for control to come back, then resumes. |
 | `handoff.metadata` | No | Delivered to the other app when control is passed. |
-
-The `metadata` object is delivered to the other app when control is passed.
 
 ### How it works
 
-When the survey reaches a handoff field:
+1. The question title is sent to the respondent as a message.
+2. Control of the conversation passes to `target_app_id`.
+3. The survey waits.
+4. When the other app hands control back, the survey resumes at the next
+   question.
 
-1. The handoff message is sent to the user (as text from the question title).
-2. The echo of that message arms the wait and passes thread control to the
-   `target_app_id`.
-3. The survey enters a wait state until the other app hands control back.
-4. When control returns, the survey resumes at the next question.
+You do **not** add a `wait` — waiting for the handback is automatic. Declare
+`type: handoff` and the `handoff` block, and nothing else.
 
-You do **not** need to add a `wait` condition — the wait for the handback is
-synthesized automatically. Simply declare `type: handoff` and the `handoff`
-block.
+### Values coming back from the other app
 
-### Metadata from the returning app
+Any `metadata` the other app includes when it hands control back becomes hidden
+fields prefixed `e_handover_metadata_`. If the returning app sends
+`{"status": "ok", "answer": "blue"}`, later questions can use
+`{{hidden:e_handover_metadata_status}}` and
+`{{hidden:e_handover_metadata_answer}}`. The app id that regained control is
+available as `{{hidden:e_handover_target_app_id}}`.
 
-When control comes back, any `metadata` the other app includes in its
-`pass_thread_control` call is flattened into hidden fields prefixed
-`e_handover_metadata_`. For example, if the returning app sends
-`metadata: { "status": "ok", "answer": "blue" }`, later questions can reference
-`{{hidden:e_handover_metadata_status}}` and `{{hidden:e_handover_metadata_answer}}`
-(the app id that regained control is available as `{{hidden:e_handover_target_app_id}}`).
+### What the other app needs
 
-### External app requirements
-
-The external app must be configured as a **Secondary Receiver** on the
-Facebook Page. To hand control back, it calls Facebook's
-`pass_thread_control` API with `target_app_id` set to the Fly replybot app ID.
+It must be configured as a **Secondary Receiver** on the Facebook Page, and to
+hand control back it calls Facebook's `pass_thread_control` API with
+`target_app_id` set to the Fly app ID.
