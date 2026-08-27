@@ -78,23 +78,52 @@ You then go to the dashboard and under the survey settings (click on the shortco
 
 ## Timeouts over 24 hours
 
-Messenger only lets you send a normal message within 24 hours of the user's last activity. To send anything after that — survey results, prize notifications, reminders — you need a **Utility Message template**, pre-approved by Facebook for your Page.
+Both Messenger and WhatsApp restrict what you may send to someone who has not
+written to you recently. To send anything after that window — survey results,
+prize notifications, reminders, the next wave of a longitudinal survey — you need
+a **Utility Message template**, pre-approved for the account the respondent is
+on.
 
-> Earlier approaches (Message Tags like `CONFIRMED_EVENT_UPDATE`, and Recurring Notifications) were deprecated by Facebook in early 2026. Utility Messages are the current, globally-available replacement and require **no user opt-in**.
+| | Messenger | WhatsApp |
+|---|---|---|
+| Ordinary messages | any time, subject to Facebook's limits | only within **24 hours** of the respondent's last message |
+| Outside that window | a Utility Message template | a Utility Message template — **nothing else arrives** |
+| If you forget | the send fails and shows up as an error | the message silently does not arrive |
+
+> Earlier Messenger approaches (Message Tags like `CONFIRMED_EVENT_UPDATE`, and
+> Recurring Notifications) were deprecated by Facebook in early 2026. Utility
+> Messages are the current replacement and require **no opt-in** from the
+> respondent on either channel.
 
 ### 1. Create the template in the dashboard
 
-In the dashboard, go to **Message Templates → Create Template**. Pick the page, name the template in `snake_case`, pick a language, and write the body. Use `{{1}}`, `{{2}}`, etc. for any values you will fill in at send time (e.g. the user's name).
+In the dashboard, go to **Message Templates → Create Template**. Pick the account
+— a Facebook page or a WhatsApp number — name the template in `snake_case`, pick
+a language, and write the body. Use `{{1}}`, `{{2}}`, etc. for any values you
+will fill in at send time (e.g. the respondent's name).
 
-**Add buttons** if you want users to tap instead of typing — this is almost always what you want, since free text after a long wait creates friction and is hard to branch on. Up to 3 buttons; labels are locked at approval and stay visible in the chat (POSTBACK buttons).
+**Add buttons** if you want respondents to tap instead of typing — this is almost
+always what you want, since free text after a long wait creates friction and is
+hard to branch on. Up to 3 buttons; labels are locked at approval and stay
+visible in the chat.
 
-A template is identified by the tuple **(page, name, language)** — the same name can exist in multiple independently-approved language variants. If your survey runs in multiple languages, create the same template name once per language.
+A template is identified by the tuple **(account, name, language)**. The same
+name can exist on several accounts and in several independently-approved language
+variants. **If your study runs on both a page and a WhatsApp number, register the
+template on both** — a survey names a template, not a channel, and a send to an
+account with no such template fails.
 
-Facebook typically auto-approves custom utility templates in seconds. Wait until the row shows **Approved** before using it.
+Messenger typically auto-approves in seconds. WhatsApp review is real and can
+take minutes to hours, so create and approve your templates before the study
+starts. Wait until the row shows **Approved** before using it.
 
 ### 2. Use it in the survey after a long wait
 
-Set up your wait step as described above (any timeout over 24 hours), then make the next field a `utility_message`. If the template has buttons, the field must be a **Multiple Choice** question whose choices match the approved button labels — buttons are NOT declared in the JSON, they come from the question's choices. If the template is text-only, use a **Statement** question.
+Set up your wait step as described above (any timeout over 24 hours), then make
+the next field a `utility_message`. If the template has buttons, the field must
+be a **Multiple Choice** question whose choices match the approved button labels
+— buttons are NOT declared in the JSON, they come from the question's choices. If
+the template is text-only, use a **Statement** question.
 
 ```json
 {
@@ -113,6 +142,18 @@ Set up your wait step as described above (any timeout over 24 hours), then make 
 | `language` | Yes | The locale you approved for this template variant (e.g. `en_US`, `es_LA`, `ha`). Must match exactly. No silent default — a missing language is an error. |
 | `params` | Only if the body has placeholders | Positional array of values substituted into `{{1}}`, `{{2}}`, etc. in template order. Supports `{{hidden:X}}` interpolation. Length must equal the placeholder count. |
 
-The `params` array corresponds 1-to-1 with the `{{N}}` placeholders in the body: the first element fills `{{1}}`, the second fills `{{2}}`, and so on. If your template body has 3 placeholders, pass 3 params.
+The `params` array corresponds 1-to-1 with the `{{N}}` placeholders in the body:
+the first element fills `{{1}}`, the second fills `{{2}}`, and so on. If your
+template body has 3 placeholders, pass 3 params.
 
-For full setup details — including how the Multiple Choice question's choices map to the approved buttons and how to branch on a tap — see the [Utility Message question type]({{< ref "fly/reference/questions.md">}}#utility-message).
+For full setup details — including how the Multiple Choice question's choices map
+to the approved buttons and how to branch on a tap — see the
+[Utility Message question type]({{< ref "fly/reference/questions.md">}}#utility-message).
+
+{{< hint type="warning" >}}
+**On WhatsApp this is not optional and there is no fallback.** A wait of more than
+24 hours followed by an ordinary Statement means the survey stops there for every
+WhatsApp respondent, with nothing in the chat and nothing obviously wrong in the
+dashboard. Check every wait longer than a day. See
+[WhatsApp Surveys]({{< ref "fly/reference/whatsapp.md" >}}#the-24-hour-rule).
+{{< /hint >}}

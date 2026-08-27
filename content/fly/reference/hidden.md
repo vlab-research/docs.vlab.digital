@@ -3,6 +3,39 @@ title: Hidden Fields
 weight: 6
 ---
 
+{{< toc >}}
+
+## What a respondent arrives with
+
+Every respondent carries a set of hidden fields from the moment their
+conversation starts. Some come from the link or ad that brought them; the rest
+Fly sets itself.
+
+| Hidden field | Where it comes from |
+|---|---|
+| `form` | The shortcode in the reference they arrived with. |
+| *anything else in the reference* | The `key.value` pairs after the shortcode — `creative`, `gender`, whatever your ad carries. |
+| `platform` | The channel: `messenger` or `whatsapp`. Fly sets this. |
+| `pageid` | The messaging account they arrived on — a Facebook page id, or a WhatsApp number's id. Fly sets this. |
+| `startTime` | When the conversation started. Fly sets this. |
+| `seed` | The respondent's random seed. See [Randomization]({{< ref "fly/reference/seeds.md" >}}). |
+| `ad_id` | The id of the ad they clicked, when the platform told us. Fly sets this; it is not available for every arrival. |
+| `vt` | The opaque attribution token, when the ad carried one. Fly sets this. See [what an ad's ref carries]({{< ref "vlab/study-configuration/destination.md" >}}#what-an-ads-ref-carries). |
+| `e_*` | Values delivered by external events — payment results, and metadata handed back by another app after a [handoff]({{< ref "fly/reference/questions.md" >}}#passing-thread-control-handoff). |
+
+You can read any of them in a question with `{{hidden:name}}`, and branch on any
+of them with a Typeform logic jump.
+
+{{< hint type="note" >}}
+**`vt` and `ad_id` belong to Fly and cannot be set from a link.** If a reference
+contains `vt.something` or `ad_id.something`, that value is discarded rather than
+used — otherwise anyone who could edit a link could attach a respondent to
+somebody else's ad. On WhatsApp, where the reference is the respondent's own
+editable message, this matters.
+{{< /hint >}}
+
+## Long hidden fields
+
 Sometimes we surface hidden fields that are too long to be added as hidden fields in Typeform. These can be accessed in the text of a question/statement using the following syntax:
 
 ```

@@ -11,6 +11,11 @@ small block of JSON in the Typeform question's **Description** box.
 This page lists every question type Fly supports, with a complete example of
 each. Copy the examples as they are written here.
 
+A survey can run on Messenger or on WhatsApp, and a few of the types below
+behave differently — or fail outright — on one of them. Those differences are
+called out where they arise, and collected in one place under
+[Channels]({{< ref "fly/reference/channels.md" >}}).
+
 {{< toc >}}
 
 ## Where you write question settings
@@ -193,7 +198,8 @@ answer recorded is the choice's **label** — the text the respondent saw.
 | Messenger | up to 13 | Quick replies above the keyboard |
 
 If your survey runs on WhatsApp, keep every Multiple Choice question to **10
-choices or fewer**.
+choices or fewer**. The same limit applies to Dropdown, Picture Choice, Rating
+and Opinion Scale — see [Channels]({{< ref "fly/reference/channels.md" >}}).
 
 **If any choice is longer than about 15 characters**, tapping becomes unreliable
 and the labels get cut off. Use letters as the choices and put the real text in
@@ -446,7 +452,7 @@ conversation.
 | Setting | Required | What it does |
 |---|---|---|
 | `url` | Yes | Where the button sends the respondent. Write the full address, in quotes. |
-| `buttonText` | No | The label on the button. Keep it under 20 characters — longer labels are cut off. Defaults to `View website`. |
+| `buttonText` | No | The label on the button. **20 characters maximum.** On Messenger a longer label is cut off; on WhatsApp the message fails to send. Defaults to `View website`. |
 | `keepMoving` | No | `true` sends the message and continues to the next question immediately. |
 | `wait` | No | Hold the survey until the respondent clicks. See [below](#waiting-for-a-click-or-a-play). |
 | `responseMessage` | No | What to reply with if the respondent types something instead of tapping the button. |
@@ -478,6 +484,10 @@ same way. Write the whole thing in the `url`:
 
 Whether the respondent's phone actually opens a dialler or a mail app is up to
 their phone. The click is recorded either way.
+
+**This is the only way to send one of these on WhatsApp.** A tracked link becomes
+an ordinary web address that redirects, which WhatsApp accepts; a `tel:` written
+straight into a [plain link](#plain-links) does not send there at all.
 
 ## Videos
 
@@ -517,7 +527,7 @@ is `164118668`. **Keep it in quotes**, as above.
 | Setting | Required | What it does |
 |---|---|---|
 | `videoId` | Yes | The Vimeo video id, in quotes. |
-| `buttonText` | No | The label on the button. Under 20 characters. Defaults to `View website`. |
+| `buttonText` | No | The label on the button. **20 characters maximum** — on WhatsApp a longer label makes the message fail to send. Defaults to `View website`. |
 | `keepMoving` | No | `true` sends the message and continues to the next question immediately. |
 | `wait` | No | Hold the survey until the respondent plays the video. See [below](#waiting-for-a-click-or-a-play). |
 | `responseMessage` | No | What to reply with if the respondent types something instead of tapping the button. |
@@ -618,7 +628,14 @@ who clicked, use a [tracked link](#tracked-links) instead.
 
 Set `extensions` to `true` only if the page you are linking to uses Messenger
 Extensions **and** its domain is whitelisted in your Facebook app. If it is not
-whitelisted, the button will not open. For most links, `false` is correct.
+whitelisted, the button will not open. For most links, `false` is correct. It has
+no effect on WhatsApp.
+
+**On WhatsApp a plain link must be an ordinary web address.** `http://` and
+`https://` work, and an address with no scheme at all is treated as `https://`.
+Anything else — `tel:`, `mailto:`, `sms:` — fails to send; use a
+[tracked link](#tracked-links) for those. The 20-character limit on `buttonText`
+applies here too, and a longer label is a send failure rather than a truncation.
 
 {{< hint type="warning" >}}
 **A `webview` is never tracked, even if it points at one of our own addresses.**
@@ -689,7 +706,11 @@ exactly as it appears in the question.
 ## Notify
 
 Sends Facebook's built-in "Notify Me" request, which gets you permission to send
-the respondent one message later. Messenger only.
+the respondent one message later.
+
+**Messenger only.** WhatsApp has no equivalent — there is nothing for a
+respondent to opt into. Use a [Utility Message](#utility-message) instead, which
+needs no permission on either channel.
 
 In Typeform, pick **Statement**, and put this in the description:
 
@@ -740,37 +761,68 @@ but do not build new surveys around them — use a
 
 ## Utility Message
 
-Sends a pre-approved Facebook **Utility Message template**. Use this for
-anything that has to reach the respondent after the 24-hour messaging window has
-closed — survey results, prize notifications, reminders.
+Sends a **pre-approved message template**. Use this for anything that has to
+reach the respondent after the 24-hour messaging window has closed — survey
+results, prize notifications, reminders, the second wave of a longitudinal
+survey.
+
+It works on **both Messenger and WhatsApp**, and the question you write is
+identical on both. What differs is where the template is approved and how strict
+the platform is about the window:
+
+| | Messenger | WhatsApp |
+|---|---|---|
+| Needed for | messages more than 24 hours after the respondent's last activity | the same — and **nothing else sends** outside that window |
+| Approval | usually instant | a real review, minutes to hours, and stricter about wording |
+| Opt-in from the respondent | none | none |
+| Buttons | stay visible in the chat | stay visible in the chat |
 
 > Utility Messages are the current replacement for the deprecated Message Tags
-> (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications. They require no
-> opt-in from the respondent, but they do require a template that Facebook has
-> approved for your Page.
+> (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications.
 
 ### 1. Create the template in the dashboard
 
-Go to **Message Templates** in the dashboard. A template is identified by the
-tuple **(page, name, language)** — the same template name can exist in several
-independently-approved language variants, each created and approved separately.
+Go to **Message Templates** in the dashboard and pick the account the template is
+for — a Facebook page, or a WhatsApp number. A template is identified by the
+tuple **(account, name, language)**: the same name can exist on several accounts
+and in several language variants, each approved independently.
 
 | Field | Constraint |
 |-------|-----------|
-| Name | `snake_case` — lowercase letters, digits, underscores. Unique per (page, language). |
-| Language | Must be an exact Facebook-supported locale (`en_US`, `es_LA`, `ha`, …). |
+| Name | `snake_case` — lowercase letters, digits, underscores. Unique per (account, language). |
+| Language | Must be an exact supported locale (`en_US`, `es_LA`, `ha`, …). |
 | Body | Up to **1024 characters**. Use `{{1}}`, `{{2}}`, … for positional placeholders. Numbering must start at `{{1}}` and be sequential. |
 | Buttons | Optional. Up to **3 buttons**. Each label is **≤ 20 characters** and unique within the template. Buttons stay visible in the chat until the respondent taps one. |
 
-If your body contains placeholders, the dashboard will prompt for a **sample
-value** per placeholder. Facebook reviewers see the body with these values
-substituted in — that is how they judge whether the content is truly utility and
-not promotional. Samples are **not** used at send time; real values come from
-`params` in your question's description.
+If your body contains placeholders, the dashboard prompts for a **sample value**
+per placeholder. Reviewers see the body with these values substituted in — that
+is how they judge whether the content is genuinely utility and not promotional.
+Samples are **not** used at send time; real values come from `params` in your
+question's description. WhatsApp requires them for every placeholder.
+
+{{< hint type="note" >}}
+**A survey names a template, not a channel.** If your study runs on both a
+Facebook page and a WhatsApp number, register the same template name on **both
+accounts** — otherwise the send fails for whichever respondents are on the
+account that has no such template.
+
+The template list is sorted by name, so the registrations of one name sit next to
+each other and an *approved here, rejected there* split is visible at a glance.
+Use the **Duplicate** action on a row to copy a template to another account: it
+pre-fills the name, language, body and buttons, so nothing is retyped.
+
+The **placeholder count, the button count and the button order must match across
+every account** where a name is registered. Your survey supplies one `params`
+array and one set of choices to all of them, so a mismatch is invisible until a
+send fails. Body *wording* may differ freely — and often has to, since WhatsApp
+rejects phrasing Messenger accepts.
+
+Sample values are not copied by Duplicate; re-enter them.
+{{< /hint >}}
 
 > **Approved templates cannot be edited.** To change wording or buttons, delete
-> and recreate. Approval is usually fast (seconds), but Facebook may reject
-> content it considers promotional.
+> and recreate. A name freed by deleting an **approved** template stays reserved
+> for 30 days; a **rejected** template's name can be reused immediately.
 
 ### 2. Add the question in Typeform
 
@@ -797,6 +849,9 @@ Put this in the question's description:
 | `language` | Yes | The exact locale of the approved variant (e.g. `en_US`, `es_LA`, `ha`). There is no default — a missing `language` is an error. |
 | `params` | Only if the body has placeholders | Positional list of values substituted into `{{1}}`, `{{2}}`, …. Supports `{{hidden:X}}` interpolation. Its length must equal the placeholder count exactly. |
 
+Note there is nothing platform-specific in the question. Fly sends the right
+shape for whichever account the respondent is on.
+
 ### Branching on a button tap
 
 Make the Multiple Choice's choice labels **exactly match** the approved
@@ -814,8 +869,7 @@ pressed:
 ```
 
 If the labels do not match, or the count differs from the template's button
-count, the send fails — Facebook validates the parameter count against the
-approved button count.
+count, the send fails.
 
 ### Typical survey flow
 
@@ -828,20 +882,25 @@ window matters:
 [Wait - timeout: 3 days]
        ↓
 [Utility Message] "Your {{1}} results are in, {{2}}!"   ← sent outside the 24h window
+       ↓
+[the rest of the wave]   ← their reply reopens the 24-hour window
 ```
 
-See [Timeouts]({{< ref "fly/reference/timeouts.md" >}}) for timeout setup.
+See [Timeouts]({{< ref "fly/reference/timeouts.md" >}}) for timeout setup, and
+[WhatsApp Surveys]({{< ref "fly/reference/whatsapp.md" >}}#the-24-hour-rule) for
+what the window means in practice on WhatsApp.
 
 ### Common rejection and send errors
 
 | What you see | What it usually means |
 |---|---|
-| Template stays `PENDING` indefinitely | Refresh the page; if still stuck after an hour, delete and recreate. |
-| Rejected: "promotional" / `TAG_SHOULD_BE_MARKETING` | Facebook classified the body as marketing. Rewrite it to be transactional — confirmations, reminders, results — and remove calls-to-action like "Claim now!". |
-| Rejected: `TEMPLATE_VARIABLES_MISSING_SAMPLE_VALUES` | A `{{N}}` placeholder in the body has no sample value. Provide one in the dashboard form, or remove the placeholder. |
-| Send fails with "template not found" | The `(template, language)` pair in your description does not match any approved row. Check the spelling and create the missing language variant. |
+| Template stays `PENDING` indefinitely | On Messenger, refresh the page; if still stuck after an hour, delete and recreate. On WhatsApp, review genuinely takes time — wait before recreating. |
+| Rejected: "promotional" / `TAG_SHOULD_BE_MARKETING` | The body was classified as marketing. Rewrite it to be transactional — confirmations, reminders, results — and remove calls-to-action like "Claim now!". |
+| Rejected: missing sample values | A `{{N}}` placeholder in the body has no sample value. Provide one in the dashboard form, or remove the placeholder. |
+| Send fails with "template not found" | The `(template, language)` pair in your description does not match an approved template **on the account that respondent is on**. Check the spelling, the language variant, and whether the template exists on both accounts. |
 | Send fails with "placeholder count mismatch" | The `params` list length does not match the number of `{{N}}` placeholders in the body. Count and align. |
 | Button-tap question has fewer or more choices than the approved template | The Multiple Choice's choice count must equal the approved button count exactly. |
+| The message never arrives, and nothing errors on WhatsApp | Check whether the send was actually outside the window and whether a template was used at all — an ordinary statement after a long wait silently does not arrive on WhatsApp. |
 
 ## Stitch
 
@@ -875,6 +934,10 @@ Read about payment question types under
 [Incentive Payments]({{< ref "fly/reference/incentive_payments.md" >}}).
 
 ## Passing Thread Control (Handoff)
+
+**Messenger only.** WhatsApp has no equivalent of Facebook's handover protocol,
+so a handoff question does nothing there — keep it off any path a WhatsApp
+respondent can take.
 
 Hands the conversation to another Facebook app (a "secondary receiver" in
 Facebook's handover protocol), and picks the survey back up when that app hands

@@ -65,14 +65,14 @@ Returns responses as a paginated JSON array.
 | `shortcode` | Shortcode of the form that produced this response. |
 | `surveyid` | ID of the form that produced this response. |
 | `flowid` | ID of the conversation flow this response belongs to. |
-| `userid` | The participant identifier. |
+| `userid` | The participant identifier — a Facebook page-scoped id on Messenger, a phone number on WhatsApp. |
 | `question_ref` | Reference of the question that was answered. |
 | `question_idx` | Index of the question within the form. |
 | `question_text` | The text of the question. |
 | `response` | The participant's raw answer. |
 | `timestamp` | ISO 8601 timestamp of the response. |
-| `metadata` | Per-response metadata, if any. |
-| `pageid` | The Facebook page ID involved, if applicable. |
+| `metadata` | The hidden fields the participant carries — everything their recruitment reference brought, plus `platform`, `pageid`, `seed` and, where applicable, `ad_id` and `vt`. See [Hidden Fields]({{< ref "fly/reference/hidden.md" >}}#what-a-respondent-arrives-with). |
+| `pageid` | The messaging account involved, if applicable — a Facebook Page ID on Messenger, or the WhatsApp number's account id on WhatsApp. |
 | `translated_response` | The response translated into the survey's core language, if a translation config is set. |
 | `token` | **Cursor.** Pass this as `after` to fetch the next page. |
 

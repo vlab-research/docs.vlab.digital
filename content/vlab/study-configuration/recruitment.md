@@ -19,8 +19,16 @@ Some fields are shared by all recruitment types:
 
 - `Ad Campaign Name`: This is the name of the ad campaign that will be created for recruitment.
 - `Objective`: This is the Facebook "objective" of the recruitment campaign. You can read about the various objectives [here](https://www.facebook.com/business/help/1438417719786914). Certain objectives allow for certain optimization goals. For example, if you want to optimize for "messages," you might pick "engagement" as the objective.
-- `Optimization Goal`: The Facebook optimization goal, also called the "performance goal." You can read more about the goals [here](https://www.facebook.com/business/help/416997652473726).
-- `Destination Type`: The type of destination that the ad will route people to. For example, if you're sending people to a Messenger chatbot, use "messenger." If you're sending people to a web survey, pick "web."
+- `Optimization Goal`: The Facebook optimization goal, also called the "performance goal." You can read more about the goals [here](https://www.facebook.com/business/help/416997652473726). A study using a [Multi destination]({{< ref "destination.md" >}}#multi-messenger-or-whatsapp) must set this to `CONVERSATIONS`.
+- `Destination Type`: The type of destination that the ad will route people to. For example, if you're sending people to a web survey, pick "web."
+
+  For **chat destinations this is now derived** from the destinations you
+  configured — a Messenger destination opens Messenger, a WhatsApp destination
+  opens WhatsApp, a Multi destination opens either. You no longer have to keep
+  this field in step with them by hand, and a study whose stated type is a
+  messaging one that none of its destinations provides is refused at save time
+  rather than publishing ads that route half their clicks nowhere. See
+  [Destinations]({{< ref "destination.md" >}}#destinations-and-the-channel-an-ad-opens).
 - `Minimum Budget`: The minimum budget used by ads. No ad will ever run with less than this and this will be used as the starting/default budget when recruitment begins.
 - `Start Date`: The date in which the recruiting should start.
 - `End Date`: The date on which the recruiting should end.
@@ -40,6 +48,8 @@ You will need to provide the following fields:
 ## Destination Experiment
 
 Use this when you want to create a multi-arm randomized experiment (A/B test on Facebook) where some of your sample is sent to different [destinations]({{< ref destination.md >}} "Destination Configuration").
+
+This is also the way to **compare messaging channels**: one arm with a Messenger destination and one with a WhatsApp destination gives you a randomized channel assignment. A [Multi destination]({{< ref "destination.md" >}}#multi-messenger-or-whatsapp) does not — Meta chooses the channel there, and not at random.
 
 
 You will need to have the destinations configured and you will then need to set the following fields:

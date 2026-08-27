@@ -44,7 +44,7 @@ Four filters across the top, plus a reset button:
 | **State** | Dropdown — restricts the list to one state machine value (`START`, `RESPONDING`, `QOUT`, etc.). See [Participant states](#participant-states) below for what each one means. |
 | **Form** | Free-text — matches a form shortcode exactly (e.g. `intake_v1`). |
 | **Error Tag** | Free-text — substring match on the participant's error tag. Typing `FB` matches `FB`, and typing `INTERNAL` matches `INTERNAL`. Picking this filter clears the State filter, since error tags only appear on `ERROR`/`BLOCKED` participants. |
-| **User ID** | Free-text — substring match on the participant's Facebook PSID. Use this when a specific participant reported a problem. |
+| **User ID** | Free-text — substring match on the participant's id: a Facebook PSID on Messenger, or a phone number (international form, no `+`) on WhatsApp. Use this when a specific participant reported a problem. |
 
 Changing any filter resets the page to 1. Page sizes are 10, 20, 50, or 100.
 
@@ -52,7 +52,7 @@ Changing any filter resets the page to 1. Page sizes are 10, 20, 50, or 100.
 
 | Column | What it shows |
 |--------|---------------|
-| **User ID** | The participant's Facebook PSID. Click to open the [Participant Detail](#participant-detail) view. |
+| **User ID** | The participant's id — a Facebook PSID on Messenger, a phone number on WhatsApp. Click to open the [Participant Detail](#participant-detail) view. |
 | **State** | The participant's current state, shown as a color-coded tag. |
 | **Form** | The form shortcode the participant is currently on. |
 | **Last Updated** | When this participant's state was last written to the database. Sort by this to find participants who haven't progressed in a while. |
@@ -124,6 +124,9 @@ The **Error Tag** column (and the Error Details card) classifies *why* a partici
 | `NETWORK` | `ERROR` | A network-level failure talking to Facebook or another upstream service. **Auto-retried by Dean.** |
 | `CORRUPTED_MESSAGE` | `ERROR` | An incoming event could not be parsed (e.g. missing timestamp). Usually a malformed webhook payload rather than a participant problem. |
 | `FORM_NOT_FOUND` | `ERROR` | The form shortcode for the participant's current form could not be resolved to a survey version. Often means the form was deleted or the shortcode is misspelled. |
+| `FIELD_NOT_FOUND` | `ERROR` | The form does not contain a field it refers to — a jump target, or the question the participant was sitting on when the form was edited. |
+| `INTERPOLATION_ERROR` | `ERROR` | A `{{hidden:...}}` or `{{field:...}}` reference in a question could not be resolved. |
+| `REF_DECODE` | `ERROR` | The participant arrived with a recruitment reference that could not be read, so Fly does not know which survey they wanted. Almost always a problem with the ad, not the survey — see [Channels]({{< ref "fly/reference/channels.md" >}}). |
 
 ### Which errors Dean retries automatically
 
@@ -138,7 +141,7 @@ Retries use exponential backoff (visible as the `next_retry` timestamp in the de
 
 ## Facebook error codes
 
-When the error tag is `FB`, the **FB Error Code** field (column in the list, field in the detail card) is the numeric error code Facebook's Graph API returned. These are the codes you will most often see, and whether Dean auto-retries them from `BLOCKED`:
+When the error tag is `FB`, the **FB Error Code** field (column in the list, field in the detail card) is the numeric error code Meta's Graph API returned. WhatsApp send failures arrive through the same field, with WhatsApp's own codes. These are the codes you will most often see, and whether Dean auto-retries them from `BLOCKED`:
 
 | Code | Meaning | Auto-retried by Dean? |
 |------|---------|:---:|
@@ -174,8 +177,11 @@ Filter by **State = `WAIT_EXTERNAL_EVENT`** and look at the **Timeout Date** col
 ### Find spam-blocked participants
 Filter by **State = `USER_BLOCKED`**. These are participants Fly itself blocked. A few is normal; a spike usually means a question is so broken that real participants are re-answering it 25 times. Investigate the affected form's questions before trying to recover the users.
 
+### Check that ad clickers are arriving in the right survey
+Before letting a recruitment budget run, open the Monitor tab on the survey you are advertising and confirm that participants are appearing at all. If they are not, they are most likely landing on [the default form]({{< ref "fly/reference/default_response.md" >}}) instead — which shows up as arrivals on shortcode `305`, not as errors, because a misrouted participant is not an errored one. A cluster of `REF_DECODE` errors is the other symptom of the same problem.
+
 ### Investigate one participant's full history
-Type (or paste) their Facebook PSID into the **User ID** filter. Open the detail view and read the **Question & Answer Transcript** top to bottom — it is the complete ordered record of what the bot asked and what the participant answered, which is what you need when a participant reports a problem.
+Type (or paste) their user id into the **User ID** filter. Open the detail view and read the **Question & Answer Transcript** top to bottom — it is the complete ordered record of what the bot asked and what the participant answered, which is what you need when a participant reports a problem.
 
 ---
 

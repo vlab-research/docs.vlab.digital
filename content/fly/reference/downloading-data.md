@@ -43,3 +43,19 @@ Only useful when pivoting the data to wide format. This takes metadata from the 
 
 1. For adding metadata like "creative" to know which ad the respondent came through. 
 2. Adding metadata associated with variables used for stratification. In that case, they take the name of the [variable]({{< ref "vlab/study-configuration/variables.md">}}) that you defined when setting up the study in vlab.
+
+The metadata every respondent carries — including `platform`, which tells you
+whether they answered on Messenger or WhatsApp — is listed under
+[Hidden Fields]({{< ref "fly/reference/hidden.md" >}}#what-a-respondent-arrives-with).
+
+### If your study's ads carry a looked-up ref
+
+Some Virtual Lab studies send an opaque token in the ad instead of spelling the
+stratum out, so `creative` and `gender` are **not** in the export. Add the
+metadata column `vt` instead, and join it against the study's
+[Ad Attributions]({{< ref "vlab/study-configuration/ad_attributions.md" >}})
+export on its `ref_token` column. Your stratum columns come back, named as they
+always were.
+
+You can tell which kind of study you have by looking at the export: if `creative`
+is there, nothing needs joining.

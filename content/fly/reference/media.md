@@ -8,9 +8,8 @@ and documents your survey sends to respondents. You upload a file, you copy the
 URL it gives you back, and you paste that URL into your survey. That is the whole
 feature.
 
-The URLs it produces work on **every platform Fly supports** — WhatsApp,
-Messenger and Instagram — with no per-platform setup and no per-platform copy of
-the file.
+The URLs it produces work on **every channel Fly supports** — WhatsApp and
+Messenger — with no per-channel setup and no per-channel copy of the file.
 
 {{< toc >}}
 
@@ -42,7 +41,7 @@ existing URL.
 
 A file is accepted only if it is one of the formats below. Limits are the
 strictest of any platform we send on, so **anything the library accepts is
-guaranteed to send on WhatsApp, Messenger and Instagram alike**.
+guaranteed to send on WhatsApp and Messenger alike**.
 
 | Kind | Formats accepted | Maximum size |
 |---|---|---|
@@ -139,7 +138,12 @@ Consequences worth knowing:
   expired, or fails outright, we fall back to sending your URL. The message still
   goes out.
 - **The same JSON works everywhere.** One `url` in your survey covers every
-  platform and every account.
+  channel and every account.
+
+One thing does differ by channel: on WhatsApp the question's title is sent as the
+attachment's **caption**, and a document's **filename** is what the respondent
+sees. On Messenger neither is shown. See
+[Channels]({{< ref "fly/reference/channels.md" >}}#captions-on-attachments).
 
 {{< hint type="note" >}}
 **If you have used `attachment_id` before:** that was the old way of referencing

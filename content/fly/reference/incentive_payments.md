@@ -3,6 +3,20 @@ title: Incentive Payments
 weight: 9
 ---
 
+A payment question pauses the survey, sends the payment, and picks the survey
+back up when the provider answers.
+
+{{< hint type="warning" >}}
+**On WhatsApp, a payment result that comes back more than 24 hours later cannot
+be delivered as an ordinary message.** Most results are immediate and this never
+arises — but a provider that is slow, retried, or down overnight can push the
+reply outside WhatsApp's messaging window, after which only an approved template
+sends. If your study pays on WhatsApp, make the message that follows the payment
+a [Utility Message]({{< ref "questions.md" >}}#utility-message), or accept that a
+minority of respondents will hear nothing back. See
+[WhatsApp Surveys]({{< ref "whatsapp.md" >}}#the-24-hour-rule).
+{{< /hint >}}
+
 ## Payment - Reloadly
 
 JSON:

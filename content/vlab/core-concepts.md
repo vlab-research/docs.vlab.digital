@@ -13,3 +13,24 @@ To do so, Virtual Lab needs to know a few things:
 3. How should the ads be targeted to different types of people? This is defined with `Variables` and `Strata`.
 4. How much money can be spent on advertising and over what period of time? This is called `Recruitment`.
 5. How will Virtual Lab know how many, and what type, of people have been fully recruited? This involves configuring a `Data Source` and defining a set of `Data Extraction` variables used to determine stratification.
+
+## How a respondent is connected back to their ad
+
+Virtual Lab creates exactly one ad per (creative, stratum) pair, and every ad
+carries a **ref**: a short string that travels with anyone who clicks it and
+comes back in their response data. The ref is what makes a respondent
+attributable to a stratum, and therefore what the optimizer counts.
+
+There are two ways a study can do this, and it is a per-destination choice:
+
+- **The ref spells the stratum out.** `creative.X.gender.men.form.mnchweek`
+  arrives as metadata on the respondent's record, and your export already has the
+  columns. This is the default and how Virtual Lab has always worked.
+- **The ref carries an opaque token.** Nothing about the stratum travels with the
+  ad; Virtual Lab records what each ad meant when it created it, and you join the
+  two afterwards from the [Ad Attributions]({{< ref "study-configuration/ad_attributions.md" >}})
+  export.
+
+The second exists because on some channels — click-to-WhatsApp in particular —
+the ref sits in the respondent's own message where they can read and edit it. See
+[Destinations]({{< ref "study-configuration/destination.md" >}}#what-an-ads-ref-carries).

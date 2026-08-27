@@ -225,7 +225,7 @@ def456,page_def,survey_b
 ```
 
 - **userid** — the participant's Fly user ID
-- **pageid** — the Facebook Page ID that participant is associated with
+- **pageid** — the messaging account that participant is associated with: a Facebook Page ID on Messenger, or the WhatsApp number's account id on WhatsApp
 - **shortcode** — the form shortcode *this specific user* should be bailed to (per-row destination)
 
 The header row is optional. The CSV can have 1–1000 rows. For larger batches, split into multiple bails.
