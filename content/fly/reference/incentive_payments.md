@@ -7,14 +7,16 @@ A payment question pauses the survey, sends the payment, and picks the survey
 back up when the provider answers.
 
 {{< hint type="warning" >}}
-**On WhatsApp, a payment result that comes back more than 24 hours later cannot
-be delivered as an ordinary message.** Most results are immediate and this never
-arises — but a provider that is slow, retried, or down overnight can push the
-reply outside WhatsApp's messaging window, after which only an approved template
-sends. If your study pays on WhatsApp, make the message that follows the payment
-a [Utility Message]({{< ref "questions.md" >}}#utility-message), or accept that a
+**A payment result that comes back more than 24 hours later cannot be delivered
+as an ordinary message**, on either channel. Most results are immediate and this
+never arises — but a provider that is slow, retried, or down overnight can push
+the reply outside the 24-hour messaging window, after which only an approved
+template sends.
+
+If a study pays after a wait, make the message that follows the payment a
+[Utility Message]({{< ref "questions.md" >}}#utility-message), or accept that a
 minority of respondents will hear nothing back. See
-[WhatsApp Surveys]({{< ref "whatsapp.md" >}}#the-24-hour-rule).
+[Timeouts]({{< ref "timeouts.md" >}}#timeouts-over-24-hours).
 {{< /hint >}}
 
 ## Payment - Reloadly

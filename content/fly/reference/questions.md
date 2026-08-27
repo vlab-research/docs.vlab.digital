@@ -105,8 +105,8 @@ you can refer to and the transforms you can apply.
 | A video whose watching you record | Statement | `{"type": "moviehouse", ...}` |
 | A plain link to someone else's page | Statement | `{"type": "webview", ...}` |
 | To pause the survey | Statement | `{"type": "wait", ...}` |
-| To ask permission to message later | Statement | `{"type": "notify"}` |
 | To message after 24 hours | Statement or Multiple Choice | `{"type": "utility_message", ...}` |
+| To ask permission to message later — **deprecated**, [use a template](#utility-message) | Statement | `{"type": "notify"}` |
 | To move to another form | Statement | `{"type": "stitch", ...}` |
 | To send money | Statement | `{"type": "wait", "payment": {...}}` |
 | To hand the chat to another app | Statement | `{"type": "handoff", ...}` |
@@ -703,24 +703,41 @@ For a click, `{"type": "linksniffer:click"}` on its own is what you want. If you
 do add a `"url"`, write the complete destination — `https://` and the whole path,
 exactly as it appears in the question.
 
-## Notify
+## Notify and recurring notifications (deprecated)
 
-Sends Facebook's built-in "Notify Me" request, which gets you permission to send
-the respondent one message later.
+{{< hint type="warning" >}}
+**Do not use these in new surveys.** Meta retired every opt-in-based way of
+messaging a Messenger respondent outside the 24-hour window during early 2026:
 
-**Messenger only.** WhatsApp has no equivalent — there is nothing for a
-respondent to opt into. Use a [Utility Message](#utility-message) instead, which
-needs no permission on either channel.
+| Mechanism | In a survey | Status |
+|---|---|---|
+| Message Tags (`CONFIRMED_EVENT_UPDATE`, …) | — | Retired April 2026 |
+| Recurring Notifications / Marketing Messages | `{"type": "notification_messages"}` | Retired February 2026 |
+| One-time notifications ("Notify Me") | `{"type": "notify"}` + `notifyPermission` | Retired |
+| **Utility Message templates** | **`{"type": "utility_message"}`** | **The current mechanism** |
 
-In Typeform, pick **Statement**, and put this in the description:
+A [Utility Message](#utility-message) is now the way to reach a respondent after
+the window closes, on Messenger and WhatsApp alike. It needs **no permission from
+the respondent at all** — just a template approved for your account, which is
+usually instant on Messenger.
+{{< /hint >}}
+
+The rest of this section is kept so that an older survey can be read and
+understood. It is not a recommendation.
+
+### What `notify` did
+
+A `notify` question sent Facebook's built-in "Notify Me" request, which asked the
+respondent for permission to send them **one** message later. In Typeform it was
+a **Statement** with:
 
 ```json
 {"type": "notify"}
 ```
 
-Each permission is good for **one message**. Fly stores the permissions it
-collects and spends one automatically when it needs to write to somebody outside
-Messenger's 24-hour window — but only if you tell the wait to use one:
+Each permission was good for a single message. Fly stored the permissions it
+collected and spent one when it needed to write to somebody outside the 24-hour
+window — but only if the wait asked for one:
 
 ```json
 {
@@ -737,27 +754,40 @@ Messenger's 24-hour window — but only if you tell the wait to use one:
 }
 ```
 
-Because it is only one message, the message you send has to be a **question** —
-the respondent must answer before anything else can happen. A long wait
-therefore usually looks like this:
+Because it was only one message, that message had to be a **question** — the
+respondent had to answer before anything else could happen, which reopened the
+window. A long wait therefore looked like this:
 
 1. a `notify` question
 2. a `wait` with `notifyPermission: true`
 3. a question — "would you like to answer a few more questions?"
 4. a statement that stitches to the next form
 
-You also need the permission enabled on your Page: **Page Settings → Advanced
-Messaging → one-time notification**.
+It also required the permission to be enabled on the Page, under
+**Page Settings → Advanced Messaging → one-time notification**.
 
-For most surveys a [Utility Message](#utility-message) is now the better choice —
-it needs no permission from the respondent at all.
+`{"type": "notification_messages"}` was the recurring version of the same idea:
+the respondent opted in once and could then be messaged on a schedule.
 
-{{< hint type="warning" >}}
-**Recurring notifications (`{"type": "notification_messages"}`) are deprecated.**
-Facebook retired them in early 2026. Surveys that already use them still send,
-but do not build new surveys around them — use a
-[Utility Message](#utility-message) instead.
-{{< /hint >}}
+### What to write instead
+
+Replace the whole four-step pattern above with a wait and a template:
+
+```
+[Wait — timeout: 2 days]
+       ↓
+[Utility Message]  ← a Multiple Choice question if the template has buttons
+       ↓
+[the rest of the survey]
+```
+
+The respondent's tap on the template reopens the 24-hour window, exactly as their
+answer to the notify follow-up question used to. The difference is that nobody has
+to agree to anything first, and it works the same way on WhatsApp.
+
+See [Utility Message](#utility-message), and
+[Timeouts]({{< ref "fly/reference/timeouts.md" >}}#timeouts-over-24-hours) for the
+wait itself.
 
 ## Utility Message
 
@@ -777,8 +807,11 @@ the platform is about the window:
 | Opt-in from the respondent | none | none |
 | Buttons | stay visible in the chat | stay visible in the chat |
 
-> Utility Messages are the current replacement for the deprecated Message Tags
-> (`CONFIRMED_EVENT_UPDATE`, etc.) and Recurring Notifications.
+> Utility Messages are the current replacement for every mechanism Meta retired
+> in early 2026 — Message Tags (`CONFIRMED_EVENT_UPDATE`, etc.), Recurring
+> Notifications, and the one-time
+> [Notify](#notify-and-recurring-notifications-deprecated) opt-in. On Messenger
+> they are now the only way to message somebody after the window closes.
 
 ### 1. Create the template in the dashboard
 

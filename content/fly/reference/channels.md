@@ -102,25 +102,34 @@ in the dashboard's **Message Templates** tab and used with a
 [`utility_message`]({{< ref "fly/reference/questions.md" >}}#utility-message)
 question.
 
-The restriction is much sharper on WhatsApp:
+**The window is 24 hours on both.** What differs is how the template gets
+approved, and what a mistake looks like:
 
 | | Messenger | WhatsApp |
 |---|---|---|
-| Free-form messages | any time, subject to Facebook's own limits | only within **24 hours** of the respondent's last message |
-| Outside that window | a Utility Message template | a Utility Message template — **nothing else sends, ever** |
-| Approval | usually instant | a real review; minutes to hours |
+| Ordinary messages | within **24 hours** of the respondent's last message | within **24 hours** of the respondent's last message |
+| Outside that window | a Utility Message template, and nothing else | a Utility Message template, and nothing else |
+| Approval | usually instant | a real review; minutes to hours, and stricter about wording |
 | Counted against a sending quota | no | yes — see [WhatsApp]({{< ref "fly/reference/whatsapp.md" >}}#how-many-messages-you-can-send) |
+| If you forget the template | the send fails and shows up as an error | the message silently does not arrive |
 
-Any [wait]({{< ref "fly/reference/timeouts.md" >}}) longer than 24 hours, any
-follow-up nudge and any delayed payment result therefore needs an approved
-template on WhatsApp. A survey whose long waits are followed by ordinary
-statements will simply stop for every WhatsApp respondent at that point.
+So any [wait]({{< ref "fly/reference/timeouts.md" >}}) longer than 24 hours, any
+follow-up nudge and any delayed payment result needs an approved template on
+**either** channel. A survey whose long waits are followed by ordinary statements
+stops there for every respondent — noisily on Messenger, silently on WhatsApp.
+
+{{< hint type="note" >}}
+**On Messenger this used to be avoidable, and no longer is.** Message Tags,
+Recurring Notifications and the one-time "Notify Me" opt-in were all retired by
+Meta in early 2026. A pre-approved template is now the only way to reach a
+Messenger respondent outside the window, exactly as on WhatsApp. See
+[Notify and recurring notifications]({{< ref "fly/reference/questions.md" >}}#notify-and-recurring-notifications-deprecated).
+{{< /hint >}}
 
 ### Features that exist on one channel only
 
 | Feature | Messenger | WhatsApp |
 |---|---|---|
-| [Notify]({{< ref "fly/reference/questions.md" >}}#notify) (`{"type": "notify"}`) and one-time notifications | Yes | **No** — there is no equivalent, and the question does nothing |
 | [Handoff]({{< ref "fly/reference/questions.md" >}}#passing-thread-control-handoff) to another app | Yes | **No** — WhatsApp has no thread control |
 | Persistent [Button Choice]({{< ref "fly/reference/questions.md" >}}#button-choice) | Yes | Behaves as an ordinary 3-option question |
 | Sharing a location or a contact card | — | Received but ignored; there is no question type for it |
@@ -134,8 +143,8 @@ Not supported on either channel. See
 
 Worth stating so you do not go looking for them:
 
-- **Question types.** Every question type other than `notify` and `handoff`
-  behaves the same way. You do not write a WhatsApp version of a question.
+- **Question types.** Every question type other than `handoff` behaves the same
+  way. You do not write a WhatsApp version of a question.
 - **Media.** One [Media Library]({{< ref "fly/reference/media.md" >}}) URL works
   on every channel and every connected account. There is no per-channel upload.
 - **Hidden fields, logic jumps, seeds and validation.** Identical.
@@ -188,7 +197,8 @@ Two things follow, and both matter for survey design:
    `webview`.
 4. Every wait longer than 24 hours is followed by a `utility_message` with an
    approved template on the number's account.
-5. No `notify` or `handoff` questions on the path a WhatsApp respondent takes.
+5. No `handoff` questions on the path a WhatsApp respondent takes, and no
+   `notify` questions anywhere — it is retired on Messenger too.
 6. Attachment titles read as captions, and document filenames read as filenames.
 7. The ad's autofill message is the entry reference, verbatim.
 8. You have started the survey yourself, from a real phone, before spending

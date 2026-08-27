@@ -177,6 +177,13 @@ the respondent's last message**. Outside that window, only a **pre-approved
 template** will send. There is no exception and no fallback: an ordinary message
 sent outside the window does not arrive.
 
+Messenger now has the same rule — Meta retired its opt-in alternatives in early
+2026 — so this is not a WhatsApp tax you can design around by choosing the other
+channel. What is different here is that a mistake is **silent**: on Messenger the
+failed send shows up as an error in the
+[Monitor tab]({{< ref "fly/reference/monitoring.md" >}}), on WhatsApp the message
+simply never arrives.
+
 Everything in a Fly survey that reaches out to a quiet respondent is affected:
 
 | What | Inside 24h | Outside 24h |
@@ -248,9 +255,9 @@ which matters only if a survey tries to send several messages in a burst.
 - **Receiving photos, files or voice notes from respondents.** See
   [Upload]({{< ref "fly/reference/questions.md" >}}#upload-receiving-files-from-respondents).
 - **Shared locations and contact cards.** They arrive and are ignored.
-- **[Notify]({{< ref "fly/reference/questions.md" >}}#notify) questions and
-  one-time notifications.** A Messenger concept with no WhatsApp equivalent; use
-  a template instead.
+- **[Notify]({{< ref "fly/reference/questions.md" >}}#notify-and-recurring-notifications-deprecated)
+  questions and one-time notifications.** These never existed on WhatsApp, and
+  Meta retired them on Messenger in early 2026. Use a template on both.
 - **[Handoff]({{< ref "fly/reference/questions.md" >}}#passing-thread-control-handoff)
   to another app.** WhatsApp has no thread control.
 - **More than 10 choices on a question**, and a link button label longer than 20

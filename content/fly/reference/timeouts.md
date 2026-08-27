@@ -78,22 +78,23 @@ You then go to the dashboard and under the survey settings (click on the shortco
 
 ## Timeouts over 24 hours
 
-Both Messenger and WhatsApp restrict what you may send to someone who has not
-written to you recently. To send anything after that window — survey results,
-prize notifications, reminders, the next wave of a longitudinal survey — you need
-a **Utility Message template**, pre-approved for the account the respondent is
-on.
+**Both Messenger and WhatsApp allow ordinary messages only within 24 hours of the
+respondent's last message.** To send anything after that — survey results, prize
+notifications, reminders, the next wave of a longitudinal survey — you need a
+**Utility Message template**, pre-approved for the account the respondent is on.
 
 | | Messenger | WhatsApp |
 |---|---|---|
-| Ordinary messages | any time, subject to Facebook's limits | only within **24 hours** of the respondent's last message |
-| Outside that window | a Utility Message template | a Utility Message template — **nothing else arrives** |
+| Ordinary messages | within **24 hours** of the respondent's last message | within **24 hours** of the respondent's last message |
+| Outside that window | a Utility Message template, and nothing else | a Utility Message template, and nothing else |
 | If you forget | the send fails and shows up as an error | the message silently does not arrive |
 
-> Earlier Messenger approaches (Message Tags like `CONFIRMED_EVENT_UPDATE`, and
-> Recurring Notifications) were deprecated by Facebook in early 2026. Utility
-> Messages are the current replacement and require **no opt-in** from the
-> respondent on either channel.
+> Meta retired every other out-of-window mechanism in early 2026 — Message Tags
+> like `CONFIRMED_EVENT_UPDATE`, Recurring Notifications, and the one-time
+> "Notify Me" opt-in. Utility Messages are the replacement for all of them and
+> require **no opt-in** from the respondent on either channel. See
+> [Notify and recurring notifications]({{< ref "fly/reference/questions.md" >}}#notify-and-recurring-notifications-deprecated)
+> if you are reading an older survey that uses one.
 
 ### 1. Create the template in the dashboard
 
@@ -151,9 +152,11 @@ to the approved buttons and how to branch on a tap — see the
 [Utility Message question type]({{< ref "fly/reference/questions.md">}}#utility-message).
 
 {{< hint type="warning" >}}
-**On WhatsApp this is not optional and there is no fallback.** A wait of more than
-24 hours followed by an ordinary Statement means the survey stops there for every
-WhatsApp respondent, with nothing in the chat and nothing obviously wrong in the
-dashboard. Check every wait longer than a day. See
+**This is not optional on either channel, and there is no fallback.** A wait of
+more than 24 hours followed by an ordinary Statement means the survey stops
+there — visibly on Messenger, where the send errors, and silently on WhatsApp,
+where nothing appears in the chat and nothing looks wrong in the dashboard.
+
+Check every wait longer than a day. See
 [WhatsApp Surveys]({{< ref "fly/reference/whatsapp.md" >}}#the-24-hour-rule).
 {{< /hint >}}
